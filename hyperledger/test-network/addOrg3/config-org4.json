@@ -1,0 +1,15 @@
+{
+    "NAME": 4,
+
+    "CA_SERVER_PORT":13054, 
+    "CA_USERNAME": "admin",
+    "CA_PASSWORD": "adminpw",
+
+    "COUCHDB_PORT1":11084,
+    "COUCHDB_PORT2":5984,
+    "COUCHDB_USERNAME":"admin",
+    "COUCHDB_PASSWORD":"adminpw",
+
+    "PEER_PORT":13051,
+    "PEER_CHAINCODE_PORT":13052
+}
