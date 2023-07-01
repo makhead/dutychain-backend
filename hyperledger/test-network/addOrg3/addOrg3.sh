@@ -101,7 +101,7 @@ function generateOrg3() {
   fi
 
   infoln "Generating CCP files for Org${ORG}"
-  ./ccp-generate.sh ${ORG}
+  ./ccp-generate.sh ${ORG} $PEER_PORT $CA_SERVER_PORT
 }
 
 # Generate channel configuration transaction
