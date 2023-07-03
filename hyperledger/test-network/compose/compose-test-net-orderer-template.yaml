@@ -1,0 +1,42 @@
+  ${NAME}.example.com:
+    container_name: ${NAME}.example.com
+    image: hyperledger/fabric-orderer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=${ORDERER_GENERAL_PORT}
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/${NAME}/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/${NAME}/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/${NAME}/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/${NAME}/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/${NAME}/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/${NAME}/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/${NAME}/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/${NAME}/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/${NAME}/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/${NAME}/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/${NAME}/tls/ca.crt]
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:${ORDERER_ADMIN_PORT}
+      - ORDERER_OPERATIONS_LISTENADDRESS=${NAME}.example.com:${ORDERER_OPERATION_PORT}
+      - ORDERER_METRICS_PROVIDER=prometheus
+    working_dir: /root
+    command: orderer
+    volumes:
+        - ../organizations/ordererOrganizations/example.com/orderers/${NAME}.example.com/msp:/var/hyperledger/${NAME}/msp
+        - ../organizations/ordererOrganizations/example.com/orderers/${NAME}.example.com/tls/:/var/hyperledger/${NAME}/tls
+        - ${NAME}.example.com:/var/hyperledger/production/${NAME}
+    ports:
+      - ${ORDERER_GENERAL_PORT}:${ORDERER_GENERAL_PORT}
+      - ${ORDERER_ADMIN_PORT}:${ORDERER_ADMIN_PORT}
+      - ${ORDERER_OPERATION_PORT}:${ORDERER_OPERATION_PORT}
+    networks:
+      - test
+

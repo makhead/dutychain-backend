@@ -197,22 +197,58 @@ function createOrgs() {
       fi
     done
 
-    infoln "Creating Org1 Identities"
+     
+    
+    for ((i=0;i<$PEER_NUM;i++));
+    do
+      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+      CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
+      CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USERNAME" | tr -d '"') 
+      CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PASSWORD" | tr -d '"') 
 
-    createOrg1
+      CA_PEER_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PEER_USERNAME" | tr -d '"') 
+      CA_PEER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PEER_PASSWORD" | tr -d '"') 
+      CA_USER_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USER_USERNAME" | tr -d '"') 
+      CA_USER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USER_PASSWORD" | tr -d '"') 
+      CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_ADMIN_USERNAME" | tr -d '"') 
+      CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_ADMIN_PASSWORD" | tr -d '"') 
+      
 
-    infoln "Creating Org2 Identities"
+      infoln "Creating Org${ORG} Identities"
+      createOrg
+    done
+    
 
-    createOrg2
+    for ((i=0;i<$ORDERER_NUM;i++));
+    do
+      ORG=$(cat ${CONFIG_PATH} | jq ".orderers[$i].NAME" | tr -d '"')
+      CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_SERVER_PORT") 
+      CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_USERNAME" | tr -d '"') 
+      CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_PASSWORD" | tr -d '"') 
 
-    infoln "Creating Orderer Org Identities"
+      CA_ORDERER_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ORDERER_USERNAME" | tr -d '"') 
+      CA_ORDERER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ORDERER_PASSWORD" | tr -d '"') 
+      CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ADMIN_USERNAME" | tr -d '"') 
+      CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ADMIN_PASSWORD" | tr -d '"') 
 
-    createOrderer
-
+      infoln "Creating Orderer ${ORG} Identities"
+      createOrderer
+    done
+    
   fi
 
-  infoln "Generating CCP files for Org1 and Org2"
-  ./organizations/ccp-generate.sh
+
+
+  for ((i=0;i<$PEER_NUM;i++));
+  do
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+    PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+    CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
+    
+    infoln "Generating CCP files for ${ORG}"
+    ./organizations/ccp-generate.sh $ORG $PEER_PORT $CA_SERVER_PORT
+  done
+  
 }
 
 # Once you create the organization crypto material, you need to create the
@@ -249,6 +285,7 @@ function networkUp() {
   if [ ! -d "organizations/peerOrganizations" ]; then
     createOrgs
   fi
+
 
   COMPOSE_FILES="-f compose/${COMPOSE_FILE_BASE} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_BASE}"
 
@@ -292,13 +329,13 @@ function createChannel() {
 
   # now run the script that creates a channel. This script uses configtxgen once
   # to create the channel creation transaction and the anchor peer updates.
-  scripts/createChannel.sh $CHANNEL_NAME $CLI_DELAY $MAX_RETRY $VERBOSE
+  scripts/createChannel.sh $CHANNEL_NAME $CLI_DELAY $MAX_RETRY $VERBOSE $CONFIG_PATH
 }
 
 
 ## Call the script to deploy a chaincode to the channel
 function deployCC() {
-  scripts/deployCC.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE
+  scripts/deployCC.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE $CONFIG_PATH
 
   if [ $? -ne 0 ]; then
     fatalln "Deploying chaincode failed"
@@ -351,8 +388,17 @@ function networkDown() {
     # remove orderer block and other channel configuration transactions and certs
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf system-genesis-block/*.block organizations/peerOrganizations organizations/ordererOrganizations'
     ## remove fabric ca artifacts
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/org1/msp organizations/fabric-ca/org1/tls-cert.pem organizations/fabric-ca/org1/ca-cert.pem organizations/fabric-ca/org1/IssuerPublicKey organizations/fabric-ca/org1/IssuerRevocationPublicKey organizations/fabric-ca/org1/fabric-ca-server.db'
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/org2/msp organizations/fabric-ca/org2/tls-cert.pem organizations/fabric-ca/org2/ca-cert.pem organizations/fabric-ca/org2/IssuerPublicKey organizations/fabric-ca/org2/IssuerRevocationPublicKey organizations/fabric-ca/org2/fabric-ca-server.db'
+
+    for ((i=0;i<$PEER_NUM;i++));
+    do
+      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+      ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c "cd /data && rm -rf organizations/fabric-ca/org${ORG}/msp organizations/fabric-ca/org${ORG}/tls-cert.pem organizations/fabric-ca/org${ORG}/ca-cert.pem organizations/fabric-ca/org${ORG}/IssuerPublicKey organizations/fabric-ca/org${ORG}/IssuerRevocationPublicKey organizations/fabric-ca/org${ORG}/fabric-ca-server.db"
+    done
+
+    #${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/org1/msp organizations/fabric-ca/org1/tls-cert.pem organizations/fabric-ca/org1/ca-cert.pem organizations/fabric-ca/org1/IssuerPublicKey organizations/fabric-ca/org1/IssuerRevocationPublicKey organizations/fabric-ca/org1/fabric-ca-server.db'
+    #${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/org2/msp organizations/fabric-ca/org2/tls-cert.pem organizations/fabric-ca/org2/ca-cert.pem organizations/fabric-ca/org2/IssuerPublicKey organizations/fabric-ca/org2/IssuerRevocationPublicKey organizations/fabric-ca/org2/fabric-ca-server.db'
+    
+
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/ordererOrg/msp organizations/fabric-ca/ordererOrg/tls-cert.pem organizations/fabric-ca/ordererOrg/ca-cert.pem organizations/fabric-ca/ordererOrg/IssuerPublicKey organizations/fabric-ca/ordererOrg/IssuerRevocationPublicKey organizations/fabric-ca/ordererOrg/fabric-ca-server.db'
     #${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf addOrg3/fabric-ca/org3/msp addOrg3/fabric-ca/org3/tls-cert.pem addOrg3/fabric-ca/org3/ca-cert.pem addOrg3/fabric-ca/org3/IssuerPublicKey addOrg3/fabric-ca/org3/IssuerRevocationPublicKey addOrg3/fabric-ca/org3/fabric-ca-server.db'
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c "cd /data && rm -rf addOrg3/fabric-ca/org${ORG}/msp addOrg3/fabric-ca/org${ORG}/tls-cert.pem addOrg3/fabric-ca/org${ORG}/ca-cert.pem addOrg3/fabric-ca/org${ORG}/IssuerPublicKey addOrg3/fabric-ca/org${ORG}/IssuerRevocationPublicKey addOrg3/fabric-ca/org${ORG}/fabric-ca-server.db"
@@ -405,8 +451,9 @@ CC_SEQUENCE=1
 DATABASE="leveldb"
 # default ORG name
 ORG=3
-
-
+ORDERER_NUM=1
+PEER_NUM=2
+CONFIG_PATH="./config.json"
 # Get docker sock path from environment variable
 SOCK="${DOCKER_HOST:-/var/run/docker.sock}"
 DOCKER_SOCK="${SOCK##unix://}"
@@ -506,6 +553,12 @@ while [[ $# -ge 1 ]] ; do
     COMPOSE_FILE_ORG3_COUCH=compose-couch-org${ORG}.yaml
     # certificate authorities compose file
     COMPOSE_FILE_ORG3_CA=compose-ca-org${ORG}.yaml
+    shift
+    ;;
+  -p )
+    CONFIG_PATH="$2"
+    ORDERER_NUM=$(cat ${CONFIG_PATH} | jq ".orderers | length")
+    PEER_NUM=$(cat ${CONFIG_PATH} | jq ".peers | length")
     shift
     ;;
   * )

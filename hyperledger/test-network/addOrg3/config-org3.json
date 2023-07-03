@@ -5,7 +5,7 @@
     "CA_USERNAME": "admin",
     "CA_PASSWORD": "adminpw",
 
-    "COUCHDB_PORT1":9084,
+    "COUCHDB_PORT1":9984,
     "COUCHDB_PORT2":5984,
     "COUCHDB_USERNAME":"admin",
     "COUCHDB_PASSWORD":"adminpw",

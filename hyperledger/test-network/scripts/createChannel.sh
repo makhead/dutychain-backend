@@ -8,10 +8,12 @@ CHANNEL_NAME="$1"
 DELAY="$2"
 MAX_RETRY="$3"
 VERBOSE="$4"
+CONFIG_PATH="$5"
 : ${CHANNEL_NAME:="mychannel"}
 : ${DELAY:="3"}
 : ${MAX_RETRY:="5"}
 : ${VERBOSE:="false"}
+: ${CONFIG_PATH:="../config.json"}
 
 : ${CONTAINER_CLI:="docker"}
 : ${CONTAINER_CLI_COMPOSE:="${CONTAINER_CLI}-compose"}
@@ -27,21 +29,29 @@ createChannelGenesisBlock() {
 		fatalln "configtxgen tool not found."
 	fi
 	set -x
-	configtxgen -profile TwoOrgsApplicationGenesis -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
+	PROFILE=$(cat ${CONFIG_PATH} | jq ".PROFILE" | tr -d '"')
+	configtxgen -profile ${PROFILE} -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
 	res=$?
 	{ set +x; } 2>/dev/null
   verifyResult $res "Failed to generate channel configuration transaction..."
 }
 
 createChannel() {
-	setGlobals 1
+	PEER_ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME")
+	ORDERER_ORG=$(cat ${CONFIG_PATH} | jq ".orderers[0].NAME" | tr -d '"')
+	ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[0].ORDERER_ADMIN_PORT")
+	ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
+	ORDERER_ADMIN_TLS_SIGN_CERT=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.crt
+	ORDERER_ADMIN_TLS_PRIVATE_KEY=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.key
+
+	setGlobals $PEER_ORG
 	# Poll in case the raft leader is not set yet
 	local rc=1
 	local COUNTER=1
 	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
 		sleep $DELAY
 		set -x
-		osnadmin channel join --channelID $CHANNEL_NAME --config-block ./channel-artifacts/${CHANNEL_NAME}.block -o localhost:7053 --ca-file "$ORDERER_CA" --client-cert "$ORDERER_ADMIN_TLS_SIGN_CERT" --client-key "$ORDERER_ADMIN_TLS_PRIVATE_KEY" >&log.txt
+		osnadmin channel join --channelID $CHANNEL_NAME --config-block ./channel-artifacts/${CHANNEL_NAME}.block -o localhost:${ORDERER_ADMIN_PORT} --ca-file "$ORDERER_CA" --client-cert "$ORDERER_ADMIN_TLS_SIGN_CERT" --client-key "$ORDERER_ADMIN_TLS_PRIVATE_KEY" >&log.txt
 		res=$?
 		{ set +x; } 2>/dev/null
 		let rc=$res
@@ -92,15 +102,32 @@ createChannel
 successln "Channel '$CHANNEL_NAME' created"
 
 ## Join all the peers to the channel
-infoln "Joining org1 peer to the channel..."
-joinChannel 1
-infoln "Joining org2 peer to the channel..."
-joinChannel 2
+PEER_NUM=$(cat ${CONFIG_PATH} | jq ".peers | length")
+for ((i=0;i<$PEER_NUM;i++));
+do
+	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+
+	infoln "Joining ${ORG} peer to the channel..."
+	joinChannel $ORG
+done
+# infoln "Joining org1 peer to the channel..."
+# joinChannel 1
+# infoln "Joining org2 peer to the channel..."
+# joinChannel 2
 
 ## Set the anchor peers for each org in the channel
-infoln "Setting anchor peer for org1..."
-setAnchorPeer 1
-infoln "Setting anchor peer for org2..."
-setAnchorPeer 2
+
+for ((i=0;i<$PEER_NUM;i++));
+do
+	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+
+	infoln "Setting anchor peer for ${ORG}..."
+	setAnchorPeer $ORG
+done
+
+# infoln "Setting anchor peer for org1..."
+# setAnchorPeer 1
+# infoln "Setting anchor peer for org2..."
+# setAnchorPeer 2
 
 successln "Channel '$CHANNEL_NAME' joined"

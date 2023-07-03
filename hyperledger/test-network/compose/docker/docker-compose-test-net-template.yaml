@@ -1,0 +1,14 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3.7'
+services:
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:latest
+    volumes:
+      - ./docker/peercfg:/etc/hyperledger/peercfg
+
+
