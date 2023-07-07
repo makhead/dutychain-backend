@@ -8,7 +8,7 @@ else
     CONFIG_PATH="$1"
 fi
 
-ORDERER_NUM=$(cat ${CONFIG_PATH} | jq ".orderers | length")
+
 PEER_NUM=$(cat ${CONFIG_PATH} | jq ".peers | length")
 
 # docker-compose-ca-org-template.yaml
@@ -48,21 +48,22 @@ sed -e "s/\${NAME}/${ORG}/g" \
     compose/compose-ca-org-template.yaml >> compose/compose-ca.yaml
 done
 
-for ((i=0;i<$ORDERER_NUM;i++));
-do
-ORG=$(cat ${CONFIG_PATH} | jq ".orderers[$i].NAME" | tr -d '"')
-CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_SERVER_PORT") 
-CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_USERNAME" | tr -d '"') 
-CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_PASSWORD" | tr -d '"') 
-CA_OPERATIONS_PORT=$(($CA_SERVER_PORT + 10000))
+isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+if $isDeployOrderer;
+then
+    ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+    CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.CA_SERVER_PORT") 
+    CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_USERNAME" | tr -d '"') 
+    CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_PASSWORD" | tr -d '"') 
+    CA_OPERATIONS_PORT=$(($CA_SERVER_PORT + 10000))
 
-sed -e "s/\${NAME}/${ORG}/g" \
-    -e "s/\${CA_SERVER_PORT}/${CA_SERVER_PORT}/g" \
-    -e "s/\${CA_USERNAME}/${CA_USERNAME}/g" \
-    -e "s/\${CA_PASSWORD}/${CA_PASSWORD}/g" \
-    -e "s/\${CA_OPERATIONS_PORT}/${CA_OPERATIONS_PORT}/g" \
-    compose/compose-ca-orderer-template.yaml >> compose/compose-ca.yaml
-done
+    sed -e "s/\${NAME}/${ORG}/g" \
+        -e "s/\${CA_SERVER_PORT}/${CA_SERVER_PORT}/g" \
+        -e "s/\${CA_USERNAME}/${CA_USERNAME}/g" \
+        -e "s/\${CA_PASSWORD}/${CA_PASSWORD}/g" \
+        -e "s/\${CA_OPERATIONS_PORT}/${CA_OPERATIONS_PORT}/g" \
+        compose/compose-ca-orderer-template.yaml >> compose/compose-ca.yaml
+fi
 
 
 # compose/compose-couch-org-template.yaml
@@ -103,19 +104,19 @@ PEER_CHAINCODE_PORT=$(cat ${CONFIG_PATH} | jq '.PEER_CHAINCODE_PORT')
 echo 'generating compose/compose-test-net.yaml'
 cat compose/compose-test-net-template.yaml > compose/compose-test-net.yaml
 
-for ((i=0;i<$ORDERER_NUM;i++));
-do
-ORG=$(cat ${CONFIG_PATH} | jq ".orderers[$i].NAME" | tr -d '"')
-ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[$i].ORDERER_GENERAL_PORT")
-ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[$i].ORDERER_ADMIN_PORT")
-ORDERER_OPERATION_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[$i].ORDERER_OPERATION_PORT")
-sed -e "s/\${NAME}/${ORG}/g" \
-    -e "s/\${ORDERER_GENERAL_PORT}/${ORDERER_GENERAL_PORT}/g" \
-    -e "s/\${ORDERER_ADMIN_PORT}/${ORDERER_ADMIN_PORT}/g" \
-    -e "s/\${ORDERER_OPERATION_PORT}/${ORDERER_OPERATION_PORT}/g" \
-    compose/compose-test-net-orderer-template.yaml >> compose/compose-test-net.yaml
-
-done
+isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+if $isDeployOrderer;
+then
+    ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+    ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
+    ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_ADMIN_PORT")
+    ORDERER_OPERATION_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_OPERATION_PORT")
+    sed -e "s/\${NAME}/${ORG}/g" \
+        -e "s/\${ORDERER_GENERAL_PORT}/${ORDERER_GENERAL_PORT}/g" \
+        -e "s/\${ORDERER_ADMIN_PORT}/${ORDERER_ADMIN_PORT}/g" \
+        -e "s/\${ORDERER_OPERATION_PORT}/${ORDERER_OPERATION_PORT}/g" \
+        compose/compose-test-net-orderer-template.yaml >> compose/compose-test-net.yaml
+fi
 
 for ((i=0;i<$PEER_NUM;i++));
 do

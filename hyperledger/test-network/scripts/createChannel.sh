@@ -37,12 +37,14 @@ createChannelGenesisBlock() {
 }
 
 createChannel() {
-	PEER_ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME")
-	ORDERER_ORG=$(cat ${CONFIG_PATH} | jq ".orderers[0].NAME" | tr -d '"')
-	ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[0].ORDERER_ADMIN_PORT")
+	PEER_ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
+	ORDERER_ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+	ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_ADMIN_PORT")
 	ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
 	ORDERER_ADMIN_TLS_SIGN_CERT=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.crt
 	ORDERER_ADMIN_TLS_PRIVATE_KEY=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.key
+
+	#ORDERER_IP_ADDR=$(cat ${CONFIG_PATH} | jq ".orderer.IP_ADDR" | tr -d '"')
 
 	setGlobals $PEER_ORG
 	# Poll in case the raft leader is not set yet
@@ -84,7 +86,12 @@ joinChannel() {
 
 setAnchorPeer() {
   ORG=$1
-  ${CONTAINER_CLI} exec cli ./scripts/setAnchorPeer.sh $ORG $CHANNEL_NAME 
+  DOMAIN=$2 
+  PEER_PORT=$3 
+  ORDERER_DOMAIN=$4 
+  ORDERER_PORT=$5
+
+  ${CONTAINER_CLI} exec cli ./scripts/setAnchorPeer.sh $ORG $CHANNEL_NAME $DOMAIN $PEER_PORT $ORDERER_DOMAIN $ORDERER_PORT
 }
 
 FABRIC_CFG_PATH=${PWD}/configtx
@@ -93,13 +100,20 @@ FABRIC_CFG_PATH=${PWD}/configtx
 infoln "Generating channel genesis block '${CHANNEL_NAME}.block'"
 createChannelGenesisBlock
 
+
 FABRIC_CFG_PATH=$PWD/../config/
 BLOCKFILE="./channel-artifacts/${CHANNEL_NAME}.block"
 
-## Create channel
-infoln "Creating channel ${CHANNEL_NAME}"
-createChannel
-successln "Channel '$CHANNEL_NAME' created"
+isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+if $isDeployOrderer;
+then
+	
+
+	## Create channel
+	infoln "Creating channel ${CHANNEL_NAME}"
+	createChannel
+	successln "Channel '$CHANNEL_NAME' created"
+fi
 
 ## Join all the peers to the channel
 PEER_NUM=$(cat ${CONFIG_PATH} | jq ".peers | length")
@@ -119,10 +133,14 @@ done
 
 for ((i=0;i<$PEER_NUM;i++));
 do
-	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+	DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN" | tr -d '"')
+	PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+	ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
+	ORDERER_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
 
 	infoln "Setting anchor peer for ${ORG}..."
-	setAnchorPeer $ORG
+	setAnchorPeer $ORG $DOMAIN $PEER_PORT $ORDERER_DOMAIN $ORDERER_PORT
 done
 
 # infoln "Setting anchor peer for org1..."

@@ -201,7 +201,10 @@ function createOrgs() {
     
     for ((i=0;i<$PEER_NUM;i++));
     do
-      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+      DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN" | tr -d '"')
+      IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[$i].IP_ADDR" | tr -d '"')
+
       CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
       CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USERNAME" | tr -d '"') 
       CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PASSWORD" | tr -d '"') 
@@ -219,21 +222,23 @@ function createOrgs() {
     done
     
 
-    for ((i=0;i<$ORDERER_NUM;i++));
-    do
-      ORG=$(cat ${CONFIG_PATH} | jq ".orderers[$i].NAME" | tr -d '"')
-      CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_SERVER_PORT") 
-      CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_USERNAME" | tr -d '"') 
-      CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_PASSWORD" | tr -d '"') 
 
-      CA_ORDERER_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ORDERER_USERNAME" | tr -d '"') 
-      CA_ORDERER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ORDERER_PASSWORD" | tr -d '"') 
-      CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ADMIN_USERNAME" | tr -d '"') 
-      CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderers[$i].CA_ADMIN_PASSWORD" | tr -d '"') 
+    isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+    if $isDeployOrderer;
+    then
+      ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+      CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.CA_SERVER_PORT") 
+      CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_USERNAME" | tr -d '"') 
+      CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_PASSWORD" | tr -d '"') 
+
+      CA_ORDERER_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ORDERER_USERNAME" | tr -d '"') 
+      CA_ORDERER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ORDERER_PASSWORD" | tr -d '"') 
+      CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ADMIN_USERNAME" | tr -d '"') 
+      CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ADMIN_PASSWORD" | tr -d '"') 
 
       infoln "Creating Orderer ${ORG} Identities"
       createOrderer
-    done
+    fi
     
   fi
 
@@ -241,12 +246,14 @@ function createOrgs() {
 
   for ((i=0;i<$PEER_NUM;i++));
   do
-    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN" | tr -d '"')
+    IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[$i].IP_ADDR" | tr -d '"')
     PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
     CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
     
     infoln "Generating CCP files for ${ORG}"
-    ./organizations/ccp-generate.sh $ORG $PEER_PORT $CA_SERVER_PORT
+    ./organizations/ccp-generate.sh $ORG $DOMAIN $PEER_PORT $CA_SERVER_PORT $IP_ADDR
   done
   
 }
@@ -451,7 +458,6 @@ CC_SEQUENCE=1
 DATABASE="leveldb"
 # default ORG name
 ORG=3
-ORDERER_NUM=1
 PEER_NUM=2
 CONFIG_PATH="./config.json"
 # Get docker sock path from environment variable
@@ -557,7 +563,6 @@ while [[ $# -ge 1 ]] ; do
     ;;
   -p )
     CONFIG_PATH="$2"
-    ORDERER_NUM=$(cat ${CONFIG_PATH} | jq ".orderers | length")
     PEER_NUM=$(cat ${CONFIG_PATH} | jq ".peers | length")
     shift
     ;;

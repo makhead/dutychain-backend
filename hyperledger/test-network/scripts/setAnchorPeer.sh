@@ -12,24 +12,29 @@
 
 # NOTE: this must be run in a CLI container since it requires jq and configtxlator 
 createAnchorPeerUpdate() {
+  ORG=$1
+
   infoln "Fetching channel config for channel $CHANNEL_NAME"
   fetchChannelConfig $ORG $CHANNEL_NAME ${CORE_PEER_LOCALMSPID}config.json
 
   infoln "Generating anchor peer update transaction for Org${ORG} on channel $CHANNEL_NAME"
 
-  if [ $ORG -eq 1 ]; then
-    HOST="peer0.org1.example.com"
-    PORT=7051
-  elif [ $ORG -eq 2 ]; then
-    HOST="peer0.org2.example.com"
-    PORT=9051
-  elif [ $ORG -eq "3" ]; then
-    HOST="peer0.org3.example.com"
-    PORT=11051
-  else
-    HOST="peer0.org${ORG}.example.com"
-    PORT=11051
-  fi
+  HOST="peer0.$2"
+  PORT=$3
+
+  # if [ $ORG -eq 1 ]; then
+  #   HOST="peer0.org1.example.com"
+  #   PORT=7051
+  # elif [ $ORG -eq 2 ]; then
+  #   HOST="peer0.org2.example.com"
+  #   PORT=9051
+  # elif [ $ORG -eq "3" ]; then
+  #   HOST="peer0.org3.example.com"
+  #   PORT=11051
+  # else
+  #   HOST="peer0.org${ORG}.example.com"
+  #   PORT=11051
+  # fi
 
   set -x
   # Modify the configuration to append the anchor peer 
@@ -42,8 +47,12 @@ createAnchorPeerUpdate() {
   createConfigUpdate ${CHANNEL_NAME} ${CORE_PEER_LOCALMSPID}config.json ${CORE_PEER_LOCALMSPID}modified_config.json ${CORE_PEER_LOCALMSPID}anchors.tx
 }
 
-updateAnchorPeer() {
-  peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
+updateAnchorPeer() { 
+  ORDERER_DOMAIN=$1
+  ORDERER_PORT=$2
+
+  peer channel update -o ${ORDERER_DOMAIN}:${ORDERER_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
+  #peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
   res=$?
   cat log.txt
   verifyResult $res "Anchor peer update failed"
@@ -52,9 +61,13 @@ updateAnchorPeer() {
 
 ORG=$1
 CHANNEL_NAME=$2
+DOMAIN=$3
+PEER_PORT=$4 
+ORDERER_DOMAIN=$5 
+ORDERER_PORT=$6
 
 setGlobalsCLI $ORG
 
-createAnchorPeerUpdate 
+createAnchorPeerUpdate $ORG $DOMAIN $PEER_PORT
 
-updateAnchorPeer 
+updateAnchorPeer $ORDERER_DOMAIN $ORDERER_PORT

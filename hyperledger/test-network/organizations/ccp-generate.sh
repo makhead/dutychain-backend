@@ -12,6 +12,8 @@ function json_ccp {
         -e "s/\${CAPORT}/$3/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
+        -e "s#\${DOMAIN}#$$6#" \
+        -e "s#\${IP_ADDR}#$$7#" \
         organizations/ccp-template.json
 }
 
@@ -23,6 +25,8 @@ function yaml_ccp {
         -e "s/\${CAPORT}/$3/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
+        -e "s#\${DOMAIN}#$6#" \
+        -e "s#\${IP_ADDR}#$7#" \
         organizations/ccp-template.yaml | sed -e $'s/\\\\n/\\\n          /g'
 }
 
@@ -30,10 +34,12 @@ function yaml_ccp {
 # P0PORT=7051
 # CAPORT=7054
 ORG=$1
-P0PORT=$2
-CAPORT=$3
-PEERPEM=organizations/peerOrganizations/org${ORG}.example.com/tlsca/tlsca.org${ORG}.example.com-cert.pem
-CAPEM=organizations/peerOrganizations/org${ORG}.example.com/ca/ca.org${ORG}.example.com-cert.pem
+DOMAIN=$2
+P0PORT=$3
+CAPORT=$4
+IP_ADDR=$5
+PEERPEM=organizations/peerOrganizations/${DOMAIN}/tlsca/tlsca.${DOMAIN}-cert.pem
+CAPEM=organizations/peerOrganizations/${DOMAIN}/ca/ca.${DOMAIN}-cert.pem
 
-echo "$(json_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/org${ORG}.example.com/connection-org${ORG}.json
-echo "$(yaml_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/org${ORG}.example.com/connection-org${ORG}.yaml
+echo "$(json_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM $DOMAIN $IP_ADDR)" > organizations/peerOrganizations/${DOMAIN}/connection-org${ORG}.json
+echo "$(yaml_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM $DOMAIN $IP_ADDR)" > organizations/peerOrganizations/${DOMAIN}/connection-org${ORG}.yaml

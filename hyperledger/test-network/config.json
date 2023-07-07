@@ -1,8 +1,10 @@
 {
-    "orderers":[
-        {
+    "isDeployOrderer": true,
+    "PROFILE":"TwoOrgsApplicationGenesis",
+    "orderer":{
             "NAME": "orderer",
             "DOMAIN":"orderer.example.com",
+            "IP_ADDR":"192.168.241.142",
 
             "CA_SERVER_PORT":9054,
             "CA_USERNAME": "admin",
@@ -18,12 +20,13 @@
             "ORDERER_GENERAL_PORT":7050,
             "ORDERER_ADMIN_PORT":7053,
             "ORDERER_OPERATION_PORT":9443
-        }
-    ],
+    },
     "peers":[
         {
             "NAME": 1,
-            "DOMAIN":"peer0.org1.example.com",
+            "DOMAIN":"org1.example.com",
+            "IP_ADDR":"192.168.241.142",
+
 
             "CA_SERVER_PORT":7054, 
             "CA_USERNAME": "admin",
@@ -47,7 +50,8 @@
         },
         {
             "NAME": 2,
-            "DOMAIN":"peer0.org2.example.com",
+            "DOMAIN":"org2.example.com",
+            "IP_ADDR":"192.168.241.142",
 
             "CA_SERVER_PORT":8054, 
             "CA_USERNAME": "admin",
@@ -71,7 +75,8 @@
         },
         {
             "NAME": 3,
-            "DOMAIN":"peer0.org3.example.com",
+            "DOMAIN":"org3.example.com",
+            "IP_ADDR":"192.168.241.142",
 
             "CA_SERVER_PORT":11054, 
             "CA_USERNAME": "admin",
@@ -93,7 +98,6 @@
             "PEER_CHAINCODE_PORT":11052,
             "PEER_OPERATION_PORT":9446
         }
-    ],
-    "PROFILE":"TwoOrgsApplicationGenesis"
+    ]
 }
 
