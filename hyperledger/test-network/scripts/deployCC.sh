@@ -165,9 +165,13 @@ done
 # installChaincode 3
 
 ## query whether the chaincode is installed
-queryInstalled 1
+#queryInstalled 3
+NAME=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
+queryInstalled ${NAME}
 
-
+ORDERER_IP_ADDR=$(cat ${CONFIG_PATH} | jq ".orderer.IP_ADDR" | tr -d '"')
+ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
+ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
 
 for ((i=0;i<$PEER_NUM;i++));
 do
@@ -209,12 +213,18 @@ done
 # checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": true"
 
 ## now that we know for sure both orgs have approved, commit the definition
+isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+if $isDeployOrderer;
+then
+
 ARR=()
 for ((i=0;i<$PEER_NUM;i++));
 do
   NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
   ARR+=(${NAME})
 done
+
+read -p "Press enter to continue"
 commitChaincodeDefinition ${ARR[@]}
 #commitChaincodeDefinition 1 2 3
 
@@ -225,22 +235,23 @@ do
   queryCommitted ${NAME}
 done
 
+fi
 # queryCommitted 1
 # queryCommitted 2
 # queryCommitted 3
 
 ## Invoke the chaincode - this does require that the chaincode have the 'initLedger'
 ## method defined
-if [ "$CC_INIT_FCN" = "NA" ]; then
-  infoln "Chaincode initialization is not required"
-else
-  ARR=()
-  for ((i=0;i<$PEER_NUM;i++));
-  do
-    NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
-    ARR+=(${NAME})
-  done 
-  chaincodeInvokeInit ${ARR[@]}
-fi
+# if [ "$CC_INIT_FCN" = "NA" ]; then
+#   infoln "Chaincode initialization is not required"
+# else
+#   ARR=()
+#   for ((i=0;i<$PEER_NUM;i++));
+#   do
+#     NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+#     ARR+=(${NAME})
+#   done 
+#   chaincodeInvokeInit ${ARR[@]}
+# fi
 
 exit 0
