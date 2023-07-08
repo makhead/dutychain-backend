@@ -97,9 +97,41 @@ setAnchorPeer() {
 FABRIC_CFG_PATH=${PWD}/configtx
 
 ## Create channel genesis block
+isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+if $isDeployOrderer;
+then
 infoln "Generating channel genesis block '${CHANNEL_NAME}.block'"
 createChannelGenesisBlock
 
+else
+
+
+FABRIC_CFG_PATH=$PWD/../config/
+echo $FABRIC_CFG_PATH
+ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
+DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[0].DOMAIN" | tr -d '"')
+IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[0].IP_ADDR" | tr -d '"')
+PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT" | tr -d '"')
+ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT" | tr -d '"')
+#ORG=3
+#DOMAIN="org3.example.com"
+export CORE_PEER_LOCALMSPID="Org${ORG}MSP"
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/${DOMAIN}/users/Admin@${DOMAIN}/msp
+export CORE_PEER_ADDRESS=${IP_ADDR}:${PEER_PORT}
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/${DOMAIN}/tlsca/tlsca.${DOMAIN}-cert.pem
+
+# setGlobals $ORG
+  
+
+infoln "fetch channel genesis block '${CHANNEL_NAME}.block'"
+#export CORE_PEER_LOCALMSPID="Org3MSP"
+#export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/${DOMAIN}/users/Admin@${DOMAIN}/msp
+#export CORE_PEER_ADDRESS=localhost:11051
+#export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org3.example.com/tlsca/tlsca.org3.example.com-cert.pem
+echo $CORE_PEER_MSPCONFIGPATH
+peer channel fetch 0 ./channel-artifacts/${CHANNEL_NAME}.block -c ${CHANNEL_NAME} -o orderer.example.com:${ORDERER_GENERAL_PORT} --tls --cafile $ORDERER_CA
+
+fi
 
 FABRIC_CFG_PATH=$PWD/../config/
 BLOCKFILE="./channel-artifacts/${CHANNEL_NAME}.block"
@@ -123,6 +155,7 @@ do
 
 	infoln "Joining ${ORG} peer to the channel..."
 	joinChannel $ORG
+	
 done
 # infoln "Joining org1 peer to the channel..."
 # joinChannel 1

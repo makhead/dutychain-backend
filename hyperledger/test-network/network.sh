@@ -188,15 +188,15 @@ function createOrgs() {
 
     . organizations/fabric-ca/registerEnroll.sh
 
-    while :
-    do
-      if [ ! -f "organizations/fabric-ca/org1/tls-cert.pem" ]; then
-        sleep 1
-      else
-        break
-      fi
-    done
-
+    # while :
+    # do
+    #   if [ ! -f "organizations/fabric-ca/org1/tls-cert.pem" ]; then
+    #     sleep 1
+    #   else
+    #     break
+    #   fi
+    # done
+    sleep 10
      
     
     for ((i=0;i<$PEER_NUM;i++));
@@ -322,12 +322,14 @@ function createChannel() {
   CONTAINERS=($($CONTAINER_CLI ps | grep hyperledger/ | awk '{print $2}'))
   len=$(echo ${#CONTAINERS[@]})
 
-  if [[ $len -ge 4 ]] && [[ ! -d "organizations/peerOrganizations" ]]; then
-    echo "Bringing network down to sync certs with containers"
-    networkDown
-  fi
+  # if [[ $len -ge 4 ]] && [[ ! -d "organizations/peerOrganizations" ]]; then
+  #   echo "Bringing network down to sync certs with containers"
+  #   networkDown
+  # fi
 
-  [[ $len -lt 4 ]] || [[ ! -d "organizations/peerOrganizations" ]] && bringUpNetwork="true" || echo "Network Running Already"
+  #[[ $len -lt 4 ]] || [[ ! -d "organizations/peerOrganizations" ]] && bringUpNetwork="true" || echo "Network Running Already"
+  bringUpNetwork="true"
+
 
   if [ $bringUpNetwork == "true"  ]; then
     infoln "Bringing up network"
@@ -336,6 +338,8 @@ function createChannel() {
 
   # now run the script that creates a channel. This script uses configtxgen once
   # to create the channel creation transaction and the anchor peer updates.
+  infoln "Successfully bring up the network, start create channel"
+  read -p "Press enter to continue"
   scripts/createChannel.sh $CHANNEL_NAME $CLI_DELAY $MAX_RETRY $VERBOSE $CONFIG_PATH
 }
 
