@@ -2,6 +2,21 @@
 
 
 ## Steps:
+### 0. set /etc/hosts
+add peer domain, ca domain and orderer domain to /etc/hosts
+
+Example:
+Machine 1(192.168.241.142): Org1, Org2, Orderer
+Machine 2(192.168.241.145): Org3
+```
+192.168.241.142 peer0.org1.example.com
+192.168.241.142 peer0.org2.example.com
+192.168.241.145 peer0.org3.example.com
+192.168.241.145 ca.org3.example.com
+192.168.241.142 ca.org2.example.com
+192.168.241.142 ca.org1.example.com
+192.168.241.142 orderer.example.com
+```
 
 ### 1. Setup config.json
 
