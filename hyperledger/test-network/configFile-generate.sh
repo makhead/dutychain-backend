@@ -23,14 +23,14 @@ echo 'generating compose/docker/docker-compose-test-net.yaml'
 cat compose/docker/docker-compose-test-net-template.yaml > compose/docker/docker-compose-test-net.yaml
 for ((i=0;i<$PEER_NUM;i++));
 do
-isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
-if $isDeploy;
-then
+# isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
+# if $isDeploy;
+# then
 
 ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
 sed -e "s/\${NAME}/${ORG}/g" \
     compose/docker/docker-compose-test-net-org-template.yaml >> compose/docker/docker-compose-test-net.yaml 
-fi
+#fi
 
 done
 
@@ -41,9 +41,9 @@ cat compose/compose-ca-template.yaml > compose/compose-ca.yaml
 for ((i=0;i<$PEER_NUM;i++));
 do
 
-isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
-if $isDeploy;
-then
+# isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
+# if $isDeploy;
+# then
 
 ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
 CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
@@ -85,9 +85,9 @@ cat compose/compose-couch-template.yaml > compose/compose-couch.yaml
 for ((i=0;i<$PEER_NUM;i++));
 do
 
-isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
-if $isDeploy;
-then
+#isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
+#if $isDeploy;
+#then
 
 ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
 COUCHDB_PORT1=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_PORT1") 
@@ -101,7 +101,7 @@ sed -e "s/\${NAME}/${ORG}/g" \
     -e "s/\${COUCHDB_USERNAME}/${COUCHDB_USERNAME}/g" \
     -e "s/\${COUCHDB_PASSWORD}/${COUCHDB_PASSWORD}/g" \
     compose/compose-couch-org-template.yaml >> compose/compose-couch.yaml
-fi
+#fi
 
 done
 
@@ -141,9 +141,9 @@ fi
 for ((i=0;i<$PEER_NUM;i++));
 do
 
-isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
-if $isDeploy;
-then
+#isDeploy=$(cat ${CONFIG_PATH} | jq ".peers[$i].isDeploy")
+#if $isDeploy;
+#then
 
 
 ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
@@ -157,7 +157,7 @@ sed -e "s/\${NAME}/${ORG}/g" \
     -e "s/\${PEER_OPERATION_PORT}/${PEER_OPERATION_PORT}/g" \
     compose/compose-test-net-org-template.yaml >> compose/compose-test-net.yaml
 
-fi
+#fi
 
 done
 
