@@ -3,6 +3,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network and we do some
+# modifications on the script so that it suits better in our project.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 
 function usage() {
     echo "Usage: pkgcc.sh -l <label> -a <address> [-m <META-INF directory>]"

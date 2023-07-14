@@ -5,17 +5,20 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network and we do some
+# modifications on the script so that it suits better in our project.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
+
 # This script brings up a Hyperledger Fabric network for testing smart contracts
 # and applications. The test network consists of two organizations with one
 # peer each, and a single node Raft ordering service. Users can also use this
 # script to create a channel deploy a chaincode on the channel
-#
-# prepending $PWD/../bin to PATH to ensure we are picking up the correct binaries
-# this may be commented out to resolve installed version of tools if desired
-#
-# However using PWD in the path has the side effect that location that
-# this script is run from is critical. To ease this, get the directory
-# this script is actually in and infer location from there. (putting first)
+
+
 
 ROOTDIR=$(cd "$(dirname "$0")" && pwd)
 export PATH=${ROOTDIR}/../bin:${PWD}/../bin:$PATH
@@ -34,6 +37,12 @@ infoln "Using ${CONTAINER_CLI} and ${CONTAINER_CLI_COMPOSE}"
 
 # Obtain CONTAINER_IDS and remove them
 # This function is called when you bring a network down
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function clearContainers() {
   infoln "Removing remaining containers"
   ${CONTAINER_CLI} rm -f $(${CONTAINER_CLI} ps -aq --filter label=service=hyperledger-fabric) 2>/dev/null || true
@@ -43,6 +52,12 @@ function clearContainers() {
 # Delete any images that were generated as a part of this setup
 # specifically the following images are often left behind:
 # This function is called when you bring the network down
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function removeUnwantedImages() {
   infoln "Removing generated chaincode docker images"
   ${CONTAINER_CLI} image rm -f $(${CONTAINER_CLI} images -aq --filter reference='dev-peer*') 2>/dev/null || true
@@ -54,6 +69,12 @@ NONWORKING_VERSIONS="^1\.0\. ^1\.1\. ^1\.2\. ^1\.3\. ^1\.4\."
 # Do some basic sanity checking to make sure that the appropriate versions of fabric
 # binaries/images are available. In the future, additional checking for the presence
 # of go or other items could be added.
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function checkPrereqs() {
   ## Check if your have cloned the peer binaries and configuration files.
   peer version > /dev/null 2>&1
@@ -90,157 +111,83 @@ function checkPrereqs() {
   done
 
   ## Check for fabric-ca
-  if [ "$CRYPTO" == "Certificate Authorities" ]; then
-
-    fabric-ca-client version > /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-      errorln "fabric-ca-client binary not found.."
-      errorln
-      errorln "Follow the instructions in the Fabric docs to install the Fabric Binaries:"
-      errorln "https://hyperledger-fabric.readthedocs.io/en/latest/install.html"
-      exit 1
-    fi
-    CA_LOCAL_VERSION=$(fabric-ca-client version | sed -ne 's/ Version: //p')
-    CA_DOCKER_IMAGE_VERSION=$(${CONTAINER_CLI} run --rm hyperledger/fabric-ca:latest fabric-ca-client version | sed -ne 's/ Version: //p' | head -1)
-    infoln "CA_LOCAL_VERSION=$CA_LOCAL_VERSION"
-    infoln "CA_DOCKER_IMAGE_VERSION=$CA_DOCKER_IMAGE_VERSION"
-
-    if [ "$CA_LOCAL_VERSION" != "$CA_DOCKER_IMAGE_VERSION" ]; then
-      warnln "Local fabric-ca binaries and docker images are out of sync. This may cause problems."
-    fi
+  fabric-ca-client version > /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    errorln "fabric-ca-client binary not found.."
+    errorln
+    errorln "Follow the instructions in the Fabric docs to install the Fabric Binaries:"
+    errorln "https://hyperledger-fabric.readthedocs.io/en/latest/install.html"
+    exit 1
   fi
+  CA_LOCAL_VERSION=$(fabric-ca-client version | sed -ne 's/ Version: //p')
+  CA_DOCKER_IMAGE_VERSION=$(${CONTAINER_CLI} run --rm hyperledger/fabric-ca:latest fabric-ca-client version | sed -ne 's/ Version: //p' | head -1)
+  infoln "CA_LOCAL_VERSION=$CA_LOCAL_VERSION"
+  infoln "CA_DOCKER_IMAGE_VERSION=$CA_DOCKER_IMAGE_VERSION"
+  if [ "$CA_LOCAL_VERSION" != "$CA_DOCKER_IMAGE_VERSION" ]; then
+    warnln "Local fabric-ca binaries and docker images are out of sync. This may cause problems."
+  fi
+  
 }
 
-# Before you can bring up a network, each organization needs to generate the crypto
-# material that will define that organization on the network. Because Hyperledger
-# Fabric is a permissioned blockchain, each node and user on the network needs to
-# use certificates and keys to sign and verify its actions. In addition, each user
-# needs to belong to an organization that is recognized as a member of the network.
-# You can use the Cryptogen tool or Fabric CAs to generate the organization crypto
-# material.
 
-# By default, the sample network uses cryptogen. Cryptogen is a tool that is
-# meant for development and testing that can quickly create the certificates and keys
-# that can be consumed by a Fabric network. The cryptogen tool consumes a series
-# of configuration files for each organization in the "organizations/cryptogen"
-# directory. Cryptogen uses the files to generate the crypto  material for each
-# org in the "organizations" directory.
-
-# You can also use Fabric CAs to generate the crypto material. CAs sign the certificates
-# and keys that they generate to create a valid root of trust for each organization.
-# The script uses Docker Compose to bring up three CAs, one for each peer organization
-# and the ordering organization. The configuration file for creating the Fabric CA
-# servers are in the "organizations/fabric-ca" directory. Within the same directory,
-# the "registerEnroll.sh" script uses the Fabric CA client to create the identities,
-# certificates, and MSP folders that are needed to create the test network in the
-# "organizations/ordererOrganizations" directory.
-
-# Create Organization crypto material using cryptogen or CAs
+# Create Organization using CAs
 function createOrgs() {
   if [ -d "organizations/peerOrganizations" ]; then
     rm -Rf organizations/peerOrganizations && rm -Rf organizations/ordererOrganizations
   fi
 
-  # Create crypto material using cryptogen
-  if [ "$CRYPTO" == "cryptogen" ]; then
-    which cryptogen
-    if [ "$?" -ne 0 ]; then
-      fatalln "cryptogen tool not found. exiting"
-    fi
-    infoln "Generating certificates using cryptogen tool"
+  infoln "Generating certificates using Fabric CA"
+  ${CONTAINER_CLI_COMPOSE} -f compose/$COMPOSE_FILE_CA -f compose/$CONTAINER_CLI/${CONTAINER_CLI}-$COMPOSE_FILE_CA up -d 2>&1
 
-    infoln "Creating Org1 Identities"
+  . organizations/fabric-ca/registerEnroll.sh
 
-    set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-org1.yaml --output="organizations"
-    res=$?
-    { set +x; } 2>/dev/null
-    if [ $res -ne 0 ]; then
-      fatalln "Failed to generate certificates..."
-    fi
-
-    infoln "Creating Org2 Identities"
-
-    set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-org2.yaml --output="organizations"
-    res=$?
-    { set +x; } 2>/dev/null
-    if [ $res -ne 0 ]; then
-      fatalln "Failed to generate certificates..."
-    fi
-
-    infoln "Creating Orderer Org Identities"
-
-    set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-orderer.yaml --output="organizations"
-    res=$?
-    { set +x; } 2>/dev/null
-    if [ $res -ne 0 ]; then
-      fatalln "Failed to generate certificates..."
-    fi
-
-  fi
-
-  # Create crypto material using Fabric CA
-  if [ "$CRYPTO" == "Certificate Authorities" ]; then
-    infoln "Generating certificates using Fabric CA"
-    ${CONTAINER_CLI_COMPOSE} -f compose/$COMPOSE_FILE_CA -f compose/$CONTAINER_CLI/${CONTAINER_CLI}-$COMPOSE_FILE_CA up -d 2>&1
-
-    . organizations/fabric-ca/registerEnroll.sh
-
-    # while :
-    # do
-    #   if [ ! -f "organizations/fabric-ca/org1/tls-cert.pem" ]; then
-    #     sleep 1
-    #   else
-    #     break
-    #   fi
-    # done
-    sleep 10
+  # while :
+  # do
+  #   if [ ! -f "organizations/fabric-ca/org1/tls-cert.pem" ]; then
+  #     sleep 1
+  #   else
+  #     break
+  #   fi
+  # done
+  sleep 10
      
     
-    for ((i=0;i<$PEER_NUM;i++));
-    do
-      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
-      DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN" | tr -d '"')
-      IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[$i].IP_ADDR" | tr -d '"')
-
-      CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
-      CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USERNAME" | tr -d '"') 
-      CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PASSWORD" | tr -d '"') 
-
-      CA_PEER_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PEER_USERNAME" | tr -d '"') 
-      CA_PEER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PEER_PASSWORD" | tr -d '"') 
-      CA_USER_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USER_USERNAME" | tr -d '"') 
-      CA_USER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USER_PASSWORD" | tr -d '"') 
-      CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_ADMIN_USERNAME" | tr -d '"') 
-      CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_ADMIN_PASSWORD" | tr -d '"') 
-      
-
-      infoln "Creating Org${ORG} Identities"
-      createOrg
-    done
+  for ((i=0;i<$PEER_NUM;i++));
+  do
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN" | tr -d '"')
+    IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[$i].IP_ADDR" | tr -d '"')
+    CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
+    CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USERNAME" | tr -d '"') 
+    CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PASSWORD" | tr -d '"') 
+    CA_PEER_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PEER_USERNAME" | tr -d '"') 
+    CA_PEER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PEER_PASSWORD" | tr -d '"') 
+    CA_USER_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USER_USERNAME" | tr -d '"') 
+    CA_USER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USER_PASSWORD" | tr -d '"') 
+    CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_ADMIN_USERNAME" | tr -d '"') 
+    CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_ADMIN_PASSWORD" | tr -d '"') 
+    
+    infoln "Creating Org${ORG} Identities"
+    createOrg
+  done
     
 
 
-    isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
-    if $isDeployOrderer;
-    then
-      ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
-      CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.CA_SERVER_PORT") 
-      CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_USERNAME" | tr -d '"') 
-      CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_PASSWORD" | tr -d '"') 
-
-      CA_ORDERER_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ORDERER_USERNAME" | tr -d '"') 
-      CA_ORDERER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ORDERER_PASSWORD" | tr -d '"') 
-      CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ADMIN_USERNAME" | tr -d '"') 
-      CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ADMIN_PASSWORD" | tr -d '"') 
-
-      infoln "Creating Orderer ${ORG} Identities"
-      createOrderer
-    fi
-    
+  isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+  if $isDeployOrderer;
+  then
+    ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+    CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.CA_SERVER_PORT") 
+    CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_USERNAME" | tr -d '"') 
+    CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_PASSWORD" | tr -d '"') 
+    CA_ORDERER_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ORDERER_USERNAME" | tr -d '"') 
+    CA_ORDERER_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ORDERER_PASSWORD" | tr -d '"') 
+    CA_ADMIN_USERNAME=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ADMIN_USERNAME" | tr -d '"') 
+    CA_ADMIN_PASSWORD=$(cat ${CONFIG_PATH} | jq ".orderer.CA_ADMIN_PASSWORD" | tr -d '"') 
+    infoln "Creating Orderer ${ORG} Identities"
+    createOrderer
   fi
+  
 
 
 
@@ -258,33 +205,15 @@ function createOrgs() {
   
 }
 
-# Once you create the organization crypto material, you need to create the
-# genesis block of the application channel.
-
-# The configtxgen tool is used to create the genesis block. Configtxgen consumes a
-# "configtx.yaml" file that contains the definitions for the sample network. The
-# genesis block is defined using the "TwoOrgsApplicationGenesis" profile at the bottom
-# of the file. This profile defines an application channel consisting of our two Peer Orgs.
-# The peer and ordering organizations are defined in the "Profiles" section at the
-# top of the file. As part of each organization profile, the file points to the
-# location of the MSP directory for each member. This MSP is used to create the channel
-# MSP that defines the root of trust for each organization. In essence, the channel
-# MSP allows the nodes and users to be recognized as network members.
-#
-# If you receive the following warning, it can be safely ignored:
-#
-# [bccsp] GetDefault -> WARN 001 Before using BCCSP, please call InitFactories(). Falling back to bootBCCSP.
-#
-# You can ignore the logs regarding intermediate certs, we are not using them in
-# this crypto implementation.
-
-# After we create the org crypto material and the application channel genesis block,
-# we can now bring up the peers and ordering service. By default, the base
-# file for creating the network is "docker-compose-test-net.yaml" in the ``docker``
-# folder. This file defines the environment variables and file mounts that
-# point the crypto material and genesis block that were created in earlier.
 
 # Bring up the peer and orderer nodes using docker compose.
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network. And I have done some 
+# modification
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function networkUp() {
   checkPrereqs
 
@@ -296,9 +225,7 @@ function networkUp() {
 
   COMPOSE_FILES="-f compose/${COMPOSE_FILE_BASE} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_BASE}"
 
-  if [ "${DATABASE}" == "couchdb" ]; then
-    COMPOSE_FILES="${COMPOSE_FILES} -f compose/${COMPOSE_FILE_COUCH} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_COUCH}"
-  fi
+  COMPOSE_FILES="${COMPOSE_FILES} -f compose/${COMPOSE_FILE_COUCH} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_COUCH}"
 
   DOCKER_SOCK="${DOCKER_SOCK}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up -d 2>&1
 
@@ -310,9 +237,16 @@ function networkUp() {
 
 # call the script to create the channel, join the peers of org1 and org2,
 # and then update the anchor peers for each organization
+# Bring up the peer and orderer nodes using docker compose.
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network. And I have done some 
+# modification
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function createChannel() {
-  # Bring up the network if it is not already up.
-  bringUpNetwork="false"
+
 
   if ! $CONTAINER_CLI info > /dev/null 2>&1 ; then
     fatalln "$CONTAINER_CLI network is required to be running to create a channel"
@@ -322,19 +256,11 @@ function createChannel() {
   CONTAINERS=($($CONTAINER_CLI ps | grep hyperledger/ | awk '{print $2}'))
   len=$(echo ${#CONTAINERS[@]})
 
-  # if [[ $len -ge 4 ]] && [[ ! -d "organizations/peerOrganizations" ]]; then
-  #   echo "Bringing network down to sync certs with containers"
-  #   networkDown
-  # fi
-
-  #[[ $len -lt 4 ]] || [[ ! -d "organizations/peerOrganizations" ]] && bringUpNetwork="true" || echo "Network Running Already"
-  bringUpNetwork="true"
 
 
-  if [ $bringUpNetwork == "true"  ]; then
-    infoln "Bringing up network"
-    networkUp
-  fi
+  infoln "Bringing up network"
+  networkUp
+  
 
   # now run the script that creates a channel. This script uses configtxgen once
   # to create the channel creation transaction and the anchor peer updates.
@@ -345,6 +271,12 @@ function createChannel() {
 
 
 ## Call the script to deploy a chaincode to the channel
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function deployCC() {
   scripts/deployCC.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE $CONFIG_PATH
 
@@ -353,16 +285,15 @@ function deployCC() {
   fi
 }
 
-## Call the script to deploy a chaincode to the channel
-function deployCCAAS() {
-  scripts/deployCCAAS.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CCAAS_DOCKER_RUN $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE $CCAAS_DOCKER_RUN
 
-  if [ $? -ne 0 ]; then
-    fatalln "Deploying chaincode-as-a-service failed"
-  fi
-}
 
 # Tear down running network
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This function is from the sample of Fabric network
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 function networkDown() {
 
   COMPOSE_BASE_FILES="-f compose/${COMPOSE_FILE_BASE} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_BASE}"
@@ -371,10 +302,10 @@ function networkDown() {
   COMPOSE_FILES="${COMPOSE_BASE_FILES} ${COMPOSE_COUCH_FILES} ${COMPOSE_CA_FILES}"
 
   # stop org3 containers also in addition to org1 and org2, in case we were running sample to add org3
-  COMPOSE_ORG3_BASE_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_BASE} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_BASE}"
-  COMPOSE_ORG3_COUCH_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_COUCH} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_COUCH}"
-  COMPOSE_ORG3_CA_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_CA} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_CA}"
-  COMPOSE_ORG3_FILES="${COMPOSE_ORG3_BASE_FILES} ${COMPOSE_ORG3_COUCH_FILES} ${COMPOSE_ORG3_CA_FILES}"
+  # COMPOSE_ORG3_BASE_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_BASE} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_BASE}"
+  # COMPOSE_ORG3_COUCH_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_COUCH} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_COUCH}"
+  # COMPOSE_ORG3_CA_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_CA} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_CA}"
+  # COMPOSE_ORG3_FILES="${COMPOSE_ORG3_BASE_FILES} ${COMPOSE_ORG3_COUCH_FILES} ${COMPOSE_ORG3_CA_FILES}"
   
 
   if [ "${CONTAINER_CLI}" == "docker" ]; then
@@ -412,11 +343,19 @@ function networkDown() {
 
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/ordererOrg/msp organizations/fabric-ca/ordererOrg/tls-cert.pem organizations/fabric-ca/ordererOrg/ca-cert.pem organizations/fabric-ca/ordererOrg/IssuerPublicKey organizations/fabric-ca/ordererOrg/IssuerRevocationPublicKey organizations/fabric-ca/ordererOrg/fabric-ca-server.db'
     #${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf addOrg3/fabric-ca/org3/msp addOrg3/fabric-ca/org3/tls-cert.pem addOrg3/fabric-ca/org3/ca-cert.pem addOrg3/fabric-ca/org3/IssuerPublicKey addOrg3/fabric-ca/org3/IssuerRevocationPublicKey addOrg3/fabric-ca/org3/fabric-ca-server.db'
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c "cd /data && rm -rf addOrg3/fabric-ca/org${ORG}/msp addOrg3/fabric-ca/org${ORG}/tls-cert.pem addOrg3/fabric-ca/org${ORG}/ca-cert.pem addOrg3/fabric-ca/org${ORG}/IssuerPublicKey addOrg3/fabric-ca/org${ORG}/IssuerRevocationPublicKey addOrg3/fabric-ca/org${ORG}/fabric-ca-server.db"
+    #${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c "cd /data && rm -rf addOrg3/fabric-ca/org${ORG}/msp addOrg3/fabric-ca/org${ORG}/tls-cert.pem addOrg3/fabric-ca/org${ORG}/ca-cert.pem addOrg3/fabric-ca/org${ORG}/IssuerPublicKey addOrg3/fabric-ca/org${ORG}/IssuerRevocationPublicKey addOrg3/fabric-ca/org${ORG}/fabric-ca-server.db"
     # remove channel and script artifacts
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf channel-artifacts log.txt *.tar.gz'
   fi
 }
+
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# The parsing code is from the sample of Fabric network. And I have done some
+# modifications.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
 
 # Using crpto vs CA. default is cryptogen
 CRYPTO="cryptogen"
@@ -459,7 +398,7 @@ CC_VERSION="1.0"
 # Chaincode definition sequence
 CC_SEQUENCE=1
 # default database
-DATABASE="leveldb"
+DATABASE="couchdb"
 # default ORG name
 ORG=3
 PEER_NUM=2
@@ -501,19 +440,12 @@ while [[ $# -ge 1 ]] ; do
     CHANNEL_NAME="$2"
     shift
     ;;
-  -ca )
-    CRYPTO="Certificate Authorities"
-    ;;
   -r )
     MAX_RETRY="$2"
     shift
     ;;
   -d )
     CLI_DELAY="$2"
-    shift
-    ;;
-  -s )
-    DATABASE="$2"
     shift
     ;;
   -ccl )
@@ -546,10 +478,6 @@ while [[ $# -ge 1 ]] ; do
     ;;
   -cci )
     CC_INIT_FCN="$2"
-    shift
-    ;;
-  -ccaasdocker )
-    CCAAS_DOCKER_RUN="$2"
     shift
     ;;
   -verbose )
@@ -604,9 +532,6 @@ elif [ "$MODE" == "restart" ]; then
 elif [ "$MODE" == "deployCC" ]; then
   infoln "deploying chaincode on channel '${CHANNEL_NAME}'"
   deployCC
-elif [ "$MODE" == "deployCCAAS" ]; then
-  infoln "deploying chaincode-as-a-service on channel '${CHANNEL_NAME}'"
-  deployCCAAS
 else
   printHelp
   exit 1

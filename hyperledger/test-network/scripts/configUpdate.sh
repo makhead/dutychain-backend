@@ -5,6 +5,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
+
 # import utils
 . scripts/envVar.sh
 

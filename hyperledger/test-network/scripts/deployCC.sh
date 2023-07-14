@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network and we do some
+# modifications on the script so that it suits better in our project.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
+
 source scripts/utils.sh
 
 CHANNEL_NAME=${1:-"mychannel"}
@@ -141,6 +149,12 @@ checkPrereqs
 
 ## package the chaincode
 packageChaincode
+
+
+# *****************************************************************************
+# Starting fron below is my code
+# *****************************************************************************
+
 if [ ! -f  ${CONFIG_PATH} ]
 then
   PEER_NUM=2
@@ -156,16 +170,9 @@ do
   installChaincode ${NAME}
 done
 
-# Install chaincode on peer0.org1 and peer0.org2
-# infoln "Installing chaincode on peer0.org1..."
-# installChaincode 1
-# infoln "Install chaincode on peer0.org2..."
-# installChaincode 2
-# infoln "Install chaincode on peer0.org3..."
-# installChaincode 3
+
 
 ## query whether the chaincode is installed
-#queryInstalled 3
 NAME=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
 queryInstalled ${NAME}
 
@@ -184,33 +191,6 @@ do
   done
 done
 
-
-## approve the definition for org1
-# approveForMyOrg 1
-
-# ## check whether the chaincode definition is ready to be committed
-# ## expect org1 to have approved and org2 not to
-# checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": false"
-# checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": false"
-# checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": false"
-
-# ## now approve also for org2
-# approveForMyOrg 2
-
-# ## check whether the chaincode definition is ready to be committed
-# ## expect them both to have approved
-# checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": true"
-# checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": true"
-# checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": true"
-
-# ## now approve also for org2
-# approveForMyOrg 3
-
-# ## check whether the chaincode definition is ready to be committed
-# ## expect them both to have approved
-# checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": true"
-# checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": true"
-# checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": true"
 
 ## now that we know for sure both orgs have approved, commit the definition
 isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
@@ -236,22 +216,6 @@ do
 done
 
 fi
-# queryCommitted 1
-# queryCommitted 2
-# queryCommitted 3
 
-## Invoke the chaincode - this does require that the chaincode have the 'initLedger'
-## method defined
-# if [ "$CC_INIT_FCN" = "NA" ]; then
-#   infoln "Chaincode initialization is not required"
-# else
-#   ARR=()
-#   for ((i=0;i<$PEER_NUM;i++));
-#   do
-#     NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
-#     ARR+=(${NAME})
-#   done 
-#   chaincodeInvokeInit ${ARR[@]}
-# fi
 
 exit 0

@@ -6,6 +6,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network and we do some
+# modifications on the script so that it suits better in our project.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
+
 source scripts/utils.sh
 
 CHANNEL_NAME=${1:-"mychannel"}

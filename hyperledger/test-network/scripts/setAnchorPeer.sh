@@ -5,6 +5,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network and we do some
+# modifications on the script so that it suits better in our project.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
+
 # import utils
 . scripts/envVar.sh
 . scripts/configUpdate.sh
@@ -22,20 +30,6 @@ createAnchorPeerUpdate() {
   HOST="peer0.$2"
   PORT=$3
 
-  # if [ $ORG -eq 1 ]; then
-  #   HOST="peer0.org1.example.com"
-  #   PORT=7051
-  # elif [ $ORG -eq 2 ]; then
-  #   HOST="peer0.org2.example.com"
-  #   PORT=9051
-  # elif [ $ORG -eq "3" ]; then
-  #   HOST="peer0.org3.example.com"
-  #   PORT=11051
-  # else
-  #   HOST="peer0.org${ORG}.example.com"
-  #   PORT=11051
-  # fi
-
   set -x
   # Modify the configuration to append the anchor peer 
   jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' ${CORE_PEER_LOCALMSPID}config.json > ${CORE_PEER_LOCALMSPID}modified_config.json
@@ -52,7 +46,6 @@ updateAnchorPeer() {
   ORDERER_PORT=$2
 
   peer channel update -o ${ORDERER_DOMAIN}:${ORDERER_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
-  #peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
   res=$?
   cat log.txt
   verifyResult $res "Anchor peer update failed"

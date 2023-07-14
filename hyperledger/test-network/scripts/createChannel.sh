@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# *****************************************************************************
+# -------------------------------Referencce------------------------------------
+# This script is the demo script of Hyperledger Fabric network and we do some
+# modifications on the script so that it suits better in our project.
+
+# Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
+# *****************************************************************************
+
 # imports  
 . scripts/envVar.sh
 . scripts/utils.sh
@@ -44,7 +52,6 @@ createChannel() {
 	ORDERER_ADMIN_TLS_SIGN_CERT=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.crt
 	ORDERER_ADMIN_TLS_PRIVATE_KEY=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.key
 
-	#ORDERER_IP_ADDR=$(cat ${CONFIG_PATH} | jq ".orderer.IP_ADDR" | tr -d '"')
 
 	setGlobals $PEER_ORG
 	# Poll in case the raft leader is not set yet
@@ -113,8 +120,6 @@ DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[0].DOMAIN" | tr -d '"')
 IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[0].IP_ADDR" | tr -d '"')
 PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT" | tr -d '"')
 ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT" | tr -d '"')
-#ORG=3
-#DOMAIN="org3.example.com"
 export CORE_PEER_LOCALMSPID="Org${ORG}MSP"
 export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/${DOMAIN}/users/Admin@${DOMAIN}/msp
 export CORE_PEER_ADDRESS=${IP_ADDR}:${PEER_PORT}
@@ -124,10 +129,6 @@ export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/${DOMA
   
 
 infoln "fetch channel genesis block '${CHANNEL_NAME}.block'"
-#export CORE_PEER_LOCALMSPID="Org3MSP"
-#export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/${DOMAIN}/users/Admin@${DOMAIN}/msp
-#export CORE_PEER_ADDRESS=localhost:11051
-#export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org3.example.com/tlsca/tlsca.org3.example.com-cert.pem
 echo $CORE_PEER_MSPCONFIGPATH
 peer channel fetch 0 ./channel-artifacts/${CHANNEL_NAME}.block -c ${CHANNEL_NAME} -o orderer.example.com:${ORDERER_GENERAL_PORT} --tls --cafile $ORDERER_CA
 
@@ -139,9 +140,6 @@ BLOCKFILE="./channel-artifacts/${CHANNEL_NAME}.block"
 isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
 if $isDeployOrderer;
 then
-	
-
-	## Create channel
 	infoln "Creating channel ${CHANNEL_NAME}"
 	createChannel
 	successln "Channel '$CHANNEL_NAME' created"
@@ -157,13 +155,9 @@ do
 	joinChannel $ORG
 	
 done
-# infoln "Joining org1 peer to the channel..."
-# joinChannel 1
-# infoln "Joining org2 peer to the channel..."
-# joinChannel 2
+
 
 ## Set the anchor peers for each org in the channel
-
 for ((i=0;i<$PEER_NUM;i++));
 do
 	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
@@ -176,9 +170,5 @@ do
 	setAnchorPeer $ORG $DOMAIN $PEER_PORT $ORDERER_DOMAIN $ORDERER_PORT
 done
 
-# infoln "Setting anchor peer for org1..."
-# setAnchorPeer 1
-# infoln "Setting anchor peer for org2..."
-# setAnchorPeer 2
 
 successln "Channel '$CHANNEL_NAME' joined"

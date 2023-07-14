@@ -33,7 +33,7 @@ Machine 2(192.168.241.145): Org3
 
 ### 5. Start the network
 ```
-./network.sh up createChannel -c mychannel -s couchdb -ca -p ./config.json
+./network.sh up createChannel -c mychannel -p ./config.json
 ```
 
 ### 6. Copy certificates
