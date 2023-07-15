@@ -1,5 +1,5 @@
-  peer0.org${NAME}.example.com:
-    container_name: peer0.org${NAME}.example.com
+  peer0.${DOMAIN}:
+    container_name: peer0.${DOMAIN}
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric

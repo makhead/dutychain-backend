@@ -3,7 +3,7 @@
     "PROFILE":"TwoOrgsApplicationGenesis",
     "orderer":{
             "NAME": "orderer",
-            "DOMAIN":"orderer.example.com",
+            "DOMAIN":"testing.com",
             "IP_ADDR":"192.168.241.142",
 
             "CA_SERVER_PORT":9054,
@@ -24,7 +24,7 @@
     "peers":[
         {
             "NAME": 1,
-            "DOMAIN":"org1.example.com",
+            "DOMAIN":"org1.testing.com",
             "IP_ADDR":"192.168.241.142",
 
 

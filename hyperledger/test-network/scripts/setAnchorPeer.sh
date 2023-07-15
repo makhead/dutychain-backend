@@ -13,19 +13,28 @@
 # Reference: https://hyperledger-fabric.readthedocs.io/en/release-2.5/
 # *****************************************************************************
 
+ORG=$1
+CHANNEL_NAME=$2
+DOMAIN=$3
+PEER_PORT=$4
+ORDERER_DOMAIN=$5 
+ORDERER_PORT=$6
+ORDERER_ORG=$7
+
 # import utils
-. scripts/envVar.sh
-. scripts/configUpdate.sh
+. scripts/envVar.sh 
+. scripts/configUpdate.sh $ORDERER_DOMAIN $ORDERER_ORG
+
 
 
 # NOTE: this must be run in a CLI container since it requires jq and configtxlator 
 createAnchorPeerUpdate() {
   ORG=$1
   HOST="peer0.$2"
+  DOMAIN=$2
   PORT=$3
-
   infoln "Fetching channel config for channel $CHANNEL_NAME"
-  fetchChannelConfig $ORG $CHANNEL_NAME ${CORE_PEER_LOCALMSPID}config.json $PORT
+  fetchChannelConfig $ORG $CHANNEL_NAME ${CORE_PEER_LOCALMSPID}config.json $PORT $DOMAIN
 
   infoln "Generating anchor peer update transaction for Org${ORG} on channel $CHANNEL_NAME"
 
@@ -45,28 +54,17 @@ createAnchorPeerUpdate() {
 updateAnchorPeer() { 
   ORDERER_DOMAIN=$1
   ORDERER_PORT=$2
-
-  peer channel update -o ${ORDERER_DOMAIN}:${ORDERER_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
+  ORDERER_ORG=$3
+  peer channel update -o ${ORDERER_ORG}.${ORDERER_DOMAIN}:${ORDERER_PORT} --ordererTLSHostnameOverride ${ORDERER_ORG}.${ORDERER_DOMAIN} -c $CHANNEL_NAME -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile "$ORDERER_CA" >&log.txt
   res=$?
   cat log.txt
   verifyResult $res "Anchor peer update failed"
   successln "Anchor peer set for org '$CORE_PEER_LOCALMSPID' on channel '$CHANNEL_NAME'"
 }
 
-ORG=$1
-CHANNEL_NAME=$2
-DOMAIN=$3
-PEER_PORT=$4 
-ORDERER_DOMAIN=$5 
-ORDERER_PORT=$6
 
-
-export CORE_PEER_LOCALMSPID="Org${ORG}MSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org${ORG}.example.com/tlsca/tlsca.org${ORG}.example.com-cert.pem
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org${ORG}.example.com/users/Admin@org${ORG}.example.com/msp
-export CORE_PEER_ADDRESS=localhost:${PEER_PORT}
-export CORE_PEER_ADDRESS=peer0.org${ORG}.example.com:${PEER_PORT}
+setGlobals $ORG $PEER_PORT $DOMAIN
 
 createAnchorPeerUpdate $ORG $DOMAIN $PEER_PORT
 
-updateAnchorPeer $ORDERER_DOMAIN $ORDERER_PORT
+updateAnchorPeer $ORDERER_DOMAIN $ORDERER_PORT $ORDERER_ORG

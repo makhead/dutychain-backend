@@ -1,5 +1,5 @@
-  peer0.org${NAME}.example.com:
-    container_name: peer0.org${NAME}.example.com
+  peer0.${DOMAIN}:
+    container_name: peer0.${DOMAIN}
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric
@@ -13,22 +13,22 @@
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
-      - CORE_PEER_ID=peer0.org${NAME}.example.com
-      - CORE_PEER_ADDRESS=peer0.org${NAME}.example.com:${PEER_PORT}
+      - CORE_PEER_ID=peer0.${DOMAIN}
+      - CORE_PEER_ADDRESS=peer0.${DOMAIN}:${PEER_PORT}
       - CORE_PEER_LISTENADDRESS=0.0.0.0:${PEER_PORT}
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org${NAME}.example.com:${PEER_CHAINCODE_PORT}
+      - CORE_PEER_CHAINCODEADDRESS=peer0.${DOMAIN}:${PEER_CHAINCODE_PORT}
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:${PEER_CHAINCODE_PORT}
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org${NAME}.example.com:${PEER_PORT}
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org${NAME}.example.com:${PEER_PORT}
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.${DOMAIN}:${PEER_PORT}
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.${DOMAIN}:${PEER_PORT}
       - CORE_PEER_LOCALMSPID=Org${NAME}MSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.org${NAME}.example.com:${PEER_OPERATION_PORT}
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.${DOMAIN}:${PEER_OPERATION_PORT}
       - CORE_METRICS_PROVIDER=prometheus
       - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org${NAME}"}
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
     volumes:
-        - ../organizations/peerOrganizations/org${NAME}.example.com/peers/peer0.org${NAME}.example.com:/etc/hyperledger/fabric
-        - peer0.org${NAME}.example.com:/var/hyperledger/production
+        - ../organizations/peerOrganizations/${DOMAIN}/peers/peer0.${DOMAIN}:/etc/hyperledger/fabric
+        - peer0.${DOMAIN}:/var/hyperledger/production
     working_dir: /root
     command: peer node start
     ports:

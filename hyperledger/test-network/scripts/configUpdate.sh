@@ -13,7 +13,9 @@
 # *****************************************************************************
 
 # import utils
-. scripts/envVar.sh
+ORDERER_DOMAIN=$1
+ORDERER_ORG=$2
+. scripts/envVar.sh 
 
 # fetchChannelConfig <org> <channel_id> <output_json>
 # Writes the current channel config for a given channel to a JSON file
@@ -23,12 +25,12 @@ fetchChannelConfig() {
   CHANNEL=$2
   OUTPUT=$3
   PORT=$4
-
-  setGlobals $ORG $PORT
+  DOMAIN=$5
+  setGlobals $ORG $PORT $DOMAIN
 
   infoln "Fetching the most recent configuration block for the channel"
   set -x
-  peer channel fetch config config_block.pb -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL --tls --cafile "$ORDERER_CA"
+  peer channel fetch config config_block.pb -o ${ORDERER_ORG}.${ORDERER_DOMAIN}:${ORDERER_PORT} --ordererTLSHostnameOverride ${ORDERER_ORG}.${ORDERER_DOMAIN} -c $CHANNEL --tls --cafile "$ORDERER_CA"
   { set +x; } 2>/dev/null
 
   infoln "Decoding config block to JSON and isolating config to ${OUTPUT}"

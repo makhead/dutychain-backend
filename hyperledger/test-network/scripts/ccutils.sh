@@ -10,8 +10,8 @@
 function installChaincode() {
   ORG=$1
   PEER_PORT=$2
-
-  setGlobals $ORG $PEER_PORT
+  DOMAIN=$3
+  setGlobals $ORG $PEER_PORT $DOMAIN
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   if test $? -ne 0; then
@@ -28,8 +28,8 @@ function installChaincode() {
 function queryInstalled() {
   ORG=$1
   PEER_PORT=$2
-
-  setGlobals $ORG $PEER_PORT
+  DOMAIN=$3
+  setGlobals $ORG $PEER_PORT $DOMAIN
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   res=$?
@@ -43,10 +43,10 @@ function queryInstalled() {
 function approveForMyOrg() {
   ORG=$1
   PEER_PORT=$2
-
-  setGlobals $ORG $PEER_PORT
+  DOMAIN=$3
+  setGlobals $ORG $PEER_PORT $DOMAIN
   set -x
-  peer lifecycle chaincode approveformyorg -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
+  peer lifecycle chaincode approveformyorg -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_ORG}.${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
   res=$?
   { set +x; } 2>/dev/null
   cat log.txt
@@ -58,10 +58,10 @@ function approveForMyOrg() {
 function checkCommitReadiness() {
   ORG=$1
   PEER_PORT=$2
+  DOMAIN=$3
 
-
-  shift 2
-  setGlobals $ORG $PEER_PORT
+  shift 3
+  setGlobals $ORG $PEER_PORT $DOMAIN
   infoln "Checking the commit readiness of the chaincode definition on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
   local COUNTER=1
@@ -99,7 +99,7 @@ function commitChaincodeDefinition() {
   # peer (if join was successful), let's supply it directly as we know
   # it using the "-o" option
   set -x
-  peer lifecycle chaincode commit -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} "${PEER_CONN_PARMS[@]}" --version ${CC_VERSION} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
+  peer lifecycle chaincode commit -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_ORG}.${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} "${PEER_CONN_PARMS[@]}" --version ${CC_VERSION} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
   res=$?
   { set +x; } 2>/dev/null
   cat log.txt
@@ -111,9 +111,9 @@ function commitChaincodeDefinition() {
 function queryCommitted() {
   ORG=$1
   PEER_PORT=$2
+  DOMAIN=$3
 
-
-  setGlobals $ORG $PEER_PORT
+  setGlobals $ORG $PEER_PORT $DOMAIN
   EXPECTED_RESULT="Version: ${CC_VERSION}, Sequence: ${CC_SEQUENCE}, Endorsement Plugin: escc, Validation Plugin: vscc"
   infoln "Querying chaincode definition on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
@@ -150,7 +150,7 @@ function chaincodeInvokeInit() {
   set -x
   fcn_call='{"function":"'${CC_INIT_FCN}'","Args":[]}'
   infoln "invoke fcn call:${fcn_call}"
-  peer chaincode invoke -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" -C $CHANNEL_NAME -n ${CC_NAME} "${PEER_CONN_PARMS[@]}" --isInit -c ${fcn_call} >&log.txt
+  peer chaincode invoke -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_ORG}.${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" -C $CHANNEL_NAME -n ${CC_NAME} "${PEER_CONN_PARMS[@]}" --isInit -c ${fcn_call} >&log.txt
   res=$?
   { set +x; } 2>/dev/null
   cat log.txt
@@ -161,8 +161,8 @@ function chaincodeInvokeInit() {
 function chaincodeQuery() {
   ORG=$1
   PEER_PORT=$2
-
-  setGlobals $ORG $PEER_PORT
+  DOMAIN=$3
+  setGlobals $ORG $PEER_PORT $DOMAIN
   infoln "Querying on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
   local COUNTER=1

@@ -24,7 +24,8 @@ cat compose/docker/docker-compose-test-net-template.yaml > compose/docker/docker
 for ((i=0;i<$PEER_NUM;i++));
 do
     ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
-    sed -e "s/\${NAME}/${ORG}/g" \
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
+    sed -e "s/\${DOMAIN}/${DOMAIN}/g" \
         compose/docker/docker-compose-test-net-org-template.yaml >> compose/docker/docker-compose-test-net.yaml 
 done
 
@@ -76,12 +77,14 @@ for ((i=0;i<$PEER_NUM;i++));
 do
 
     ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
     COUCHDB_PORT1=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_PORT1") 
     COUCHDB_PORT2=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_PORT2") 
     COUCHDB_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_USERNAME" | tr -d '"') 
     COUCHDB_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_PASSWORD" | tr -d '"') 
 
     sed -e "s/\${NAME}/${ORG}/g" \
+        -e "s/\${DOMAIN}/${DOMAIN}/g" \
         -e "s/\${COUCHDB_PORT1}/${COUCHDB_PORT1}/g" \
         -e "s/\${COUCHDB_PORT2}/${COUCHDB_PORT2}/g" \
         -e "s/\${COUCHDB_USERNAME}/${COUCHDB_USERNAME}/g" \
@@ -113,10 +116,12 @@ isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
 if $isDeployOrderer;
 then
     ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+    ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
     ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
     ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_ADMIN_PORT")
     ORDERER_OPERATION_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_OPERATION_PORT")
     sed -e "s/\${NAME}/${ORG}/g" \
+        -e "s/\${ORDERER_DOMAIN}/${ORDERER_DOMAIN}/g" \
         -e "s/\${ORDERER_GENERAL_PORT}/${ORDERER_GENERAL_PORT}/g" \
         -e "s/\${ORDERER_ADMIN_PORT}/${ORDERER_ADMIN_PORT}/g" \
         -e "s/\${ORDERER_OPERATION_PORT}/${ORDERER_OPERATION_PORT}/g" \
@@ -127,11 +132,13 @@ for ((i=0;i<$PEER_NUM;i++));
 do
 
     ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME"| tr -d '"')
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
     PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
     PEER_CHAINCODE_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_CHAINCODE_PORT")
     PEER_OPERATION_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_OPERATION_PORT")
 
     sed -e "s/\${NAME}/${ORG}/g" \
+        -e "s/\${DOMAIN}/${DOMAIN}/g" \
         -e "s/\${PEER_PORT}/${PEER_PORT}/g" \
         -e "s/\${PEER_CHAINCODE_PORT}/${PEER_CHAINCODE_PORT}/g" \
         -e "s/\${PEER_OPERATION_PORT}/${PEER_OPERATION_PORT}/g" \

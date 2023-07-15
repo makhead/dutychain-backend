@@ -117,6 +117,9 @@ else
   CC_COLL_CONFIG="--collections-config $CC_COLL_CONFIG"
 fi
 
+ORDERER_ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
+ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
+
 # import utils
 . scripts/envVar.sh
 . scripts/ccutils.sh
@@ -167,8 +170,9 @@ for ((i=0;i<$PEER_NUM;i++));
 do
   NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
   PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+  DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
   infoln "Installing chaincode on peer0.org${NAME}..."
-  installChaincode ${NAME} ${PEER_PORT}
+  installChaincode ${NAME} ${PEER_PORT} ${DOMAIN}
 done
 
 
@@ -176,22 +180,26 @@ done
 ## query whether the chaincode is installed
 NAME=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
 PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT")
-queryInstalled ${NAME} ${PEER_PORT}
+DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[0].DOMAIN"| tr -d '"')
+queryInstalled ${NAME} ${PEER_PORT} ${DOMAIN}
 
 ORDERER_IP_ADDR=$(cat ${CONFIG_PATH} | jq ".orderer.IP_ADDR" | tr -d '"')
 ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
 ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
+ORDERER_ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
 
 for ((i=0;i<$PEER_NUM;i++));
 do
   NAME_I=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
   PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
-  approveForMyOrg ${NAME_I} ${PEER_PORT}
+  DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
+  approveForMyOrg ${NAME_I} ${PEER_PORT} ${DOMAIN}
   for ((j=0;j<$PEER_NUM;j++));
   do
     NAME_J=$(cat ${CONFIG_PATH} | jq ".peers[$j].NAME" | tr -d '"')
     PEER_PORT_J=$(cat ${CONFIG_PATH} | jq ".peers[$j].PEER_PORT")
-    checkCommitReadiness ${NAME_J} ${PEER_PORT_J} "\"Org${NAME_I}MSP\": true"
+    DOMAIN_J=$(cat ${CONFIG_PATH} | jq ".peers[$j].DOMAIN"| tr -d '"')
+    checkCommitReadiness ${NAME_J} ${PEER_PORT_J} ${DOMAIN_J} "\"Org${NAME_I}MSP\": true"
   done
 done
 
@@ -206,8 +214,10 @@ then
   do
     NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
     PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
     ARR+=(${NAME})
     ARR+=(${PEER_PORT})
+    ARR+=(${DOMAIN})
   done
 
   read -p "Press enter to continue"
@@ -219,7 +229,8 @@ then
   do
     NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
     PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
-    queryCommitted ${NAME} ${PEER_PORT}
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
+    queryCommitted ${NAME} ${PEER_PORT} ${DOMAIN}
   done
 
 fi

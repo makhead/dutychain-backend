@@ -1,5 +1,5 @@
-  ${NAME}.example.com:
-    container_name: ${NAME}.example.com
+  ${NAME}.${ORDERER_DOMAIN}:
+    container_name: ${NAME}.${ORDERER_DOMAIN}
     image: hyperledger/fabric-orderer:latest
     labels:
       service: hyperledger-fabric
@@ -25,14 +25,14 @@
       - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/${NAME}/tls/ca.crt]
       - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/${NAME}/tls/ca.crt]
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:${ORDERER_ADMIN_PORT}
-      - ORDERER_OPERATIONS_LISTENADDRESS=${NAME}.example.com:${ORDERER_OPERATION_PORT}
+      - ORDERER_OPERATIONS_LISTENADDRESS=${NAME}.${ORDERER_DOMAIN}:${ORDERER_OPERATION_PORT}
       - ORDERER_METRICS_PROVIDER=prometheus
     working_dir: /root
     command: orderer
     volumes:
-        - ../organizations/ordererOrganizations/example.com/orderers/${NAME}.example.com/msp:/var/hyperledger/${NAME}/msp
-        - ../organizations/ordererOrganizations/example.com/orderers/${NAME}.example.com/tls/:/var/hyperledger/${NAME}/tls
-        - ${NAME}.example.com:/var/hyperledger/production/${NAME}
+        - ../organizations/ordererOrganizations/${ORDERER_DOMAIN}/orderers/${NAME}.${ORDERER_DOMAIN}/msp:/var/hyperledger/${NAME}/msp
+        - ../organizations/ordererOrganizations/${ORDERER_DOMAIN}/orderers/${NAME}.${ORDERER_DOMAIN}/tls/:/var/hyperledger/${NAME}/tls
+        - ${NAME}.${ORDERER_DOMAIN}:/var/hyperledger/production/${NAME}
     ports:
       - ${ORDERER_GENERAL_PORT}:${ORDERER_GENERAL_PORT}
       - ${ORDERER_ADMIN_PORT}:${ORDERER_ADMIN_PORT}
