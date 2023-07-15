@@ -6,14 +6,14 @@
 add peer domain, ca domain and orderer domain to /etc/hosts
 
 Example:
-Machine 1(192.168.241.142): Org1, Org2, Orderer
-Machine 2(192.168.241.145): Org3
+Machine 1(192.168.241.142): Org1, OrgABC, Orderer
+Machine 2(192.168.241.145): OrgDEF
 ```
 192.168.241.142 peer0.org1.example.com
-192.168.241.142 peer0.org2.example.com
-192.168.241.145 peer0.org3.example.com
-192.168.241.145 ca.org3.example.com
-192.168.241.142 ca.org2.example.com
+192.168.241.142 peer0.orgABC.example.com
+192.168.241.145 peer0.orgDEF.example.com
+192.168.241.145 ca.orgDEF.example.com
+192.168.241.142 ca.orgABC.example.com
 192.168.241.142 ca.org1.example.com
 192.168.241.142 orderer.example.com
 ```
@@ -51,11 +51,11 @@ Documents needed to copy:
 
 Example [In machine with orderer]:
 ```
-scp config.yaml username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/org3.example.com/msp
+scp config.yaml username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgDEF.example.com/msp
 
-scp -r cacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/org3.example.com/msp
+scp -r cacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgDEF.example.com/msp
 
-scp -r tlscacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/org3.example.com/msp
+scp -r tlscacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgDEF.example.com/msp
 ```
 
 #### 6.2 machine with orderer
@@ -77,7 +77,7 @@ scp -r tlsca/ username@192.168.241.145:/home/makhead/dutychain-backend/hyperledg
 
 ### 8. Deploy Chaincode
 ```
-./network.sh deployCC -c mychannel -ccn ledger -ccp ../chaincode/ledger-doctype/ -ccl javascript -p ./config.json -ccep "OR('Org1MSP.peer','Org2MSP.peer','Org3MSP.peer')" 
+./network.sh deployCC -c mychannel -ccn ledger -ccp ../chaincode/ledger-doctype/ -ccl javascript -p ./config.json -ccep "OR('Org1MSP.peer','OrgABCMSP.peer','OrgDEFMSP.peer')" 
 ```
 
 ## CleanUps

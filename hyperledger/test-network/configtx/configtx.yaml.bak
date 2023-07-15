@@ -78,15 +78,15 @@ Organizations:
                 Type: Signature
                 Rule: "OR('Org1MSP.peer')"
 
-    - &OrgABC
+    - &Org2
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: OrgABCMSP
+        Name: Org2MSP
 
         # ID to load the MSP definition as
-        ID: OrgABCMSP
+        ID: Org2MSP
 
-        MSPDir: ../organizations/peerOrganizations/orgABC.example.com/msp
+        MSPDir: ../organizations/peerOrganizations/org2.example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -94,26 +94,26 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.admin', 'OrgABCMSP.peer', 'OrgABCMSP.client')"
+                Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.admin', 'OrgABCMSP.client')"
+                Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.admin')"
+                Rule: "OR('Org2MSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.peer')"
-    
-    - &OrgDEF
+                Rule: "OR('Org2MSP.peer')"
+
+    - &Org3
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: OrgDEFMSP
+        Name: Org3MSP
 
         # ID to load the MSP definition as
-        ID: OrgDEFMSP
+        ID: Org3MSP
 
-        MSPDir: ../organizations/peerOrganizations/orgDEF.example.com/msp
+        MSPDir: ../organizations/peerOrganizations/org3.example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -121,17 +121,16 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.admin', 'OrgDEFMSP.peer', 'OrgDEFMSP.client')"
+                Rule: "OR('Org3MSP.admin', 'Org3MSP.peer', 'Org3MSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.admin', 'OrgDEFMSP.client')"
+                Rule: "OR('Org3MSP.admin', 'Org3MSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.admin')"
+                Rule: "OR('Org3MSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.peer')"
-
+                Rule: "OR('Org3MSP.peer')"
 
 ################################################################################
 #
@@ -345,6 +344,6 @@ Profiles:
             <<: *ApplicationDefaults
             Organizations:
                 - *Org1
-                - *OrgABC
-                - *OrgDEF
+                - *Org2
+                - *Org3
             Capabilities: *ApplicationCapabilities

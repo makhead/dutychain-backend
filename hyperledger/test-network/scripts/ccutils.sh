@@ -9,7 +9,9 @@
 # installChaincode PEER ORG
 function installChaincode() {
   ORG=$1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+  setGlobals $ORG $PEER_PORT
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   if test $? -ne 0; then
@@ -25,7 +27,9 @@ function installChaincode() {
 # queryInstalled PEER ORG
 function queryInstalled() {
   ORG=$1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+  setGlobals $ORG $PEER_PORT
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   res=$?
@@ -38,7 +42,9 @@ function queryInstalled() {
 # approveForMyOrg VERSION PEER ORG
 function approveForMyOrg() {
   ORG=$1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+  setGlobals $ORG $PEER_PORT
   set -x
   peer lifecycle chaincode approveformyorg -o ${ORDERER_IP_ADDR}:${ORDERER_GENERAL_PORT} --ordererTLSHostnameOverride ${ORDERER_DOMAIN} --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
   res=$?
@@ -51,8 +57,11 @@ function approveForMyOrg() {
 # checkCommitReadiness VERSION PEER ORG
 function checkCommitReadiness() {
   ORG=$1
-  shift 1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+
+  shift 2
+  setGlobals $ORG $PEER_PORT
   infoln "Checking the commit readiness of the chaincode definition on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
   local COUNTER=1
@@ -85,6 +94,7 @@ function commitChaincodeDefinition() {
   res=$?
   verifyResult $res "Invoke transaction failed on channel '$CHANNEL_NAME' due to uneven number of peer and org parameters "
 
+  
   # while 'peer chaincode' command can get the orderer endpoint from the
   # peer (if join was successful), let's supply it directly as we know
   # it using the "-o" option
@@ -100,7 +110,10 @@ function commitChaincodeDefinition() {
 # queryCommitted ORG
 function queryCommitted() {
   ORG=$1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+
+  setGlobals $ORG $PEER_PORT
   EXPECTED_RESULT="Version: ${CC_VERSION}, Sequence: ${CC_SEQUENCE}, Endorsement Plugin: escc, Validation Plugin: vscc"
   infoln "Querying chaincode definition on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
@@ -147,7 +160,9 @@ function chaincodeInvokeInit() {
 
 function chaincodeQuery() {
   ORG=$1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+  setGlobals $ORG $PEER_PORT
   infoln "Querying on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
   local COUNTER=1

@@ -23,7 +23,7 @@ echo 'generating compose/docker/docker-compose-test-net.yaml'
 cat compose/docker/docker-compose-test-net-template.yaml > compose/docker/docker-compose-test-net.yaml
 for ((i=0;i<$PEER_NUM;i++));
 do
-    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
     sed -e "s/\${NAME}/${ORG}/g" \
         compose/docker/docker-compose-test-net-org-template.yaml >> compose/docker/docker-compose-test-net.yaml 
 done
@@ -36,7 +36,7 @@ for ((i=0;i<$PEER_NUM;i++));
 do
 
 
-    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
     CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_SERVER_PORT") 
     CA_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_USERNAME" | tr -d '"') 
     CA_PASSWORD=$(cat ${CONFIG_PATH} | jq ".peers[$i].CA_PASSWORD" | tr -d '"') 
@@ -75,7 +75,7 @@ cat compose/compose-couch-template.yaml > compose/compose-couch.yaml
 for ((i=0;i<$PEER_NUM;i++));
 do
 
-    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
     COUCHDB_PORT1=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_PORT1") 
     COUCHDB_PORT2=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_PORT2") 
     COUCHDB_USERNAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].COUCHDB_USERNAME" | tr -d '"') 
@@ -92,7 +92,7 @@ done
 
 
 
-ORG=$(cat ${CONFIG_PATH} | jq '.NAME')
+# ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
 CA_SERVER_PORT=$(cat ${CONFIG_PATH} | jq '.CA_SERVER_PORT') 
 CA_USERNAME=$(cat ${CONFIG_PATH} | jq '.CA_USERNAME' | tr -d '"') 
 CA_PASSWORD=$(cat ${CONFIG_PATH} | jq '.CA_PASSWORD' | tr -d '"') 
@@ -102,8 +102,8 @@ COUCHDB_PORT2=$(cat ${CONFIG_PATH} | jq '.COUCHDB_PORT2')
 COUCHDB_USERNAME=$(cat ${CONFIG_PATH} | jq '.COUCHDB_USERNAME' | tr -d '"') 
 COUCHDB_PASSWORD=$(cat ${CONFIG_PATH} | jq '.COUCHDB_PASSWORD' | tr -d '"') 
 
-PEER_PORT=$(cat ${CONFIG_PATH} | jq '.PEER_PORT') 
-PEER_CHAINCODE_PORT=$(cat ${CONFIG_PATH} | jq '.PEER_CHAINCODE_PORT') 
+# PEER_PORT=$(cat ${CONFIG_PATH} | jq '.PEER_PORT') 
+# PEER_CHAINCODE_PORT=$(cat ${CONFIG_PATH} | jq '.PEER_CHAINCODE_PORT') 
 
 # compose/compose-test-net-template.yaml
 echo 'generating compose/compose-test-net.yaml'
@@ -126,7 +126,7 @@ fi
 for ((i=0;i<$PEER_NUM;i++));
 do
 
-    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+    ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME"| tr -d '"')
     PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
     PEER_CHAINCODE_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_CHAINCODE_PORT")
     PEER_OPERATION_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_OPERATION_PORT")

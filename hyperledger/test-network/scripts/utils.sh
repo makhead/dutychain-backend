@@ -23,7 +23,6 @@ function printHelp() {
     println
     println "    Flags:"
     println "    -c <channel name> - Name of channel to create (defaults to \"mychannel\")"
-    println "    -s <dbtype> - Peer state database to deploy: goleveldb (default) or couchdb"
     println "    -r <max retry> - CLI times out after certain number of attempts (defaults to 5)"
     println "    -d <delay> - CLI delays for a certain number of seconds (defaults to 3)"
     println "    -verbose - Verbose mode"

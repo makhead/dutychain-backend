@@ -21,14 +21,15 @@
 # NOTE: this must be run in a CLI container since it requires jq and configtxlator 
 createAnchorPeerUpdate() {
   ORG=$1
+  HOST="peer0.$2"
+  PORT=$3
 
   infoln "Fetching channel config for channel $CHANNEL_NAME"
-  fetchChannelConfig $ORG $CHANNEL_NAME ${CORE_PEER_LOCALMSPID}config.json
+  fetchChannelConfig $ORG $CHANNEL_NAME ${CORE_PEER_LOCALMSPID}config.json $PORT
 
   infoln "Generating anchor peer update transaction for Org${ORG} on channel $CHANNEL_NAME"
 
-  HOST="peer0.$2"
-  PORT=$3
+  
 
   set -x
   # Modify the configuration to append the anchor peer 
@@ -59,7 +60,12 @@ PEER_PORT=$4
 ORDERER_DOMAIN=$5 
 ORDERER_PORT=$6
 
-setGlobalsCLI $ORG
+
+export CORE_PEER_LOCALMSPID="Org${ORG}MSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org${ORG}.example.com/tlsca/tlsca.org${ORG}.example.com-cert.pem
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org${ORG}.example.com/users/Admin@org${ORG}.example.com/msp
+export CORE_PEER_ADDRESS=localhost:${PEER_PORT}
+export CORE_PEER_ADDRESS=peer0.org${ORG}.example.com:${PEER_PORT}
 
 createAnchorPeerUpdate $ORG $DOMAIN $PEER_PORT
 

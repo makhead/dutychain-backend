@@ -333,7 +333,7 @@ function networkDown() {
 
     for ((i=0;i<$PEER_NUM;i++));
     do
-      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+      ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
       ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c "cd /data && rm -rf organizations/fabric-ca/org${ORG}/msp organizations/fabric-ca/org${ORG}/tls-cert.pem organizations/fabric-ca/org${ORG}/ca-cert.pem organizations/fabric-ca/org${ORG}/IssuerPublicKey organizations/fabric-ca/org${ORG}/IssuerRevocationPublicKey organizations/fabric-ca/org${ORG}/fabric-ca-server.db"
     done
 

@@ -165,16 +165,18 @@ fi
 
 for ((i=0;i<$PEER_NUM;i++));
 do
-  NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
+  NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+  PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
   infoln "Installing chaincode on peer0.org${NAME}..."
-  installChaincode ${NAME}
+  installChaincode ${NAME} ${PEER_PORT}
 done
 
 
 
 ## query whether the chaincode is installed
 NAME=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
-queryInstalled ${NAME}
+PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT")
+queryInstalled ${NAME} ${PEER_PORT}
 
 ORDERER_IP_ADDR=$(cat ${CONFIG_PATH} | jq ".orderer.IP_ADDR" | tr -d '"')
 ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
@@ -182,12 +184,14 @@ ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
 
 for ((i=0;i<$PEER_NUM;i++));
 do
-  NAME_I=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
-  approveForMyOrg ${NAME_I}
+  NAME_I=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+  PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+  approveForMyOrg ${NAME_I} ${PEER_PORT}
   for ((j=0;j<$PEER_NUM;j++));
   do
-    NAME_J=$(cat ${CONFIG_PATH} | jq ".peers[$j].NAME")
-    checkCommitReadiness ${NAME_J} "\"Org${NAME_I}MSP\": true"
+    NAME_J=$(cat ${CONFIG_PATH} | jq ".peers[$j].NAME" | tr -d '"')
+    PEER_PORT_J=$(cat ${CONFIG_PATH} | jq ".peers[$j].PEER_PORT")
+    checkCommitReadiness ${NAME_J} ${PEER_PORT_J} "\"Org${NAME_I}MSP\": true"
   done
 done
 
@@ -197,23 +201,26 @@ isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
 if $isDeployOrderer;
 then
 
-ARR=()
-for ((i=0;i<$PEER_NUM;i++));
-do
-  NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
-  ARR+=(${NAME})
-done
+  ARR=()
+  for ((i=0;i<$PEER_NUM;i++));
+  do
+    NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+    PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+    ARR+=(${NAME})
+    ARR+=(${PEER_PORT})
+  done
 
-read -p "Press enter to continue"
-commitChaincodeDefinition ${ARR[@]}
-#commitChaincodeDefinition 1 2 3
+  read -p "Press enter to continue"
+  commitChaincodeDefinition ${ARR[@]}
+  #commitChaincodeDefinition 1 2 3
 
-# query on both orgs to see that the definition committed successfully
-for ((i=0;i<$PEER_NUM;i++));
-do
-  NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
-  queryCommitted ${NAME}
-done
+  # query on both orgs to see that the definition committed successfully
+  for ((i=0;i<$PEER_NUM;i++));
+  do
+    NAME=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+    PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT")
+    queryCommitted ${NAME} ${PEER_PORT}
+  done
 
 fi
 

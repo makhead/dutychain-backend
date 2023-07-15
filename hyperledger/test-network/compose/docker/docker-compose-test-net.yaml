@@ -25,8 +25,8 @@ services:
       - ./docker/peercfg:/etc/hyperledger/peercfg
       - ${DOCKER_SOCK}:/host/var/run/docker.sock
 
-  peer0.org2.example.com:
-    container_name: peer0.org2.example.com
+  peer0.orgABC.example.com:
+    container_name: peer0.orgABC.example.com
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric

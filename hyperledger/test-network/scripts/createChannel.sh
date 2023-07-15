@@ -46,14 +46,18 @@ createChannelGenesisBlock() {
 
 createChannel() {
 	PEER_ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
+	PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT" | tr -d '"')
 	ORDERER_ORG=$(cat ${CONFIG_PATH} | jq ".orderer.NAME" | tr -d '"')
 	ORDERER_ADMIN_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_ADMIN_PORT")
 	ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
 	ORDERER_ADMIN_TLS_SIGN_CERT=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.crt
 	ORDERER_ADMIN_TLS_PRIVATE_KEY=${PWD}/organizations/ordererOrganizations/example.com/orderers/${ORDERER_ORG}.example.com/tls/server.key
 
+	export CORE_PEER_LOCALMSPID="Org${PEER_ORG}MSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org${PEER_ORG}.example.com/tlsca/tlsca.org${PEER_ORG}.example.com-cert.pem
+    export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org${PEER_ORG}.example.com/users/Admin@org${PEER_ORG}.example.com/msp
+    export CORE_PEER_ADDRESS=localhost:${PEER_PORT}
 
-	setGlobals $PEER_ORG
 	# Poll in case the raft leader is not set yet
 	local rc=1
 	local COUNTER=1
@@ -74,7 +78,13 @@ createChannel() {
 joinChannel() {
   FABRIC_CFG_PATH=$PWD/../config/
   ORG=$1
-  setGlobals $ORG
+  PEER_PORT=$2
+
+  export CORE_PEER_LOCALMSPID="Org${ORG}MSP"
+  export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org${ORG}.example.com/tlsca/tlsca.org${ORG}.example.com-cert.pem
+  export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org${ORG}.example.com/users/Admin@org${ORG}.example.com/msp
+  export CORE_PEER_ADDRESS=localhost:${PEER_PORT}
+
 	local rc=1
 	local COUNTER=1
 	## Sometimes Join takes time, hence retry
@@ -107,30 +117,26 @@ FABRIC_CFG_PATH=${PWD}/configtx
 isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
 if $isDeployOrderer;
 then
-infoln "Generating channel genesis block '${CHANNEL_NAME}.block'"
-createChannelGenesisBlock
+	infoln "Generating channel genesis block '${CHANNEL_NAME}.block'"
+	createChannelGenesisBlock
 
 else
 
 
-FABRIC_CFG_PATH=$PWD/../config/
-echo $FABRIC_CFG_PATH
-ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
-DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[0].DOMAIN" | tr -d '"')
-IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[0].IP_ADDR" | tr -d '"')
-PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT" | tr -d '"')
-ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT" | tr -d '"')
-export CORE_PEER_LOCALMSPID="Org${ORG}MSP"
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/${DOMAIN}/users/Admin@${DOMAIN}/msp
-export CORE_PEER_ADDRESS=${IP_ADDR}:${PEER_PORT}
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/${DOMAIN}/tlsca/tlsca.${DOMAIN}-cert.pem
+	FABRIC_CFG_PATH=$PWD/../config/
+	echo $FABRIC_CFG_PATH
+	ORG=$(cat ${CONFIG_PATH} | jq ".peers[0].NAME" | tr -d '"')
+	DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[0].DOMAIN" | tr -d '"')
+	IP_ADDR=$(cat ${CONFIG_PATH} | jq ".peers[0].IP_ADDR" | tr -d '"')
+	PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[0].PEER_PORT")
+	ORDERER_GENERAL_PORT=$(cat ${CONFIG_PATH} | jq ".orderer.ORDERER_GENERAL_PORT")
 
-# setGlobals $ORG
-  
+	setGlobals $ORG $PEER_PORT
+	
 
-infoln "fetch channel genesis block '${CHANNEL_NAME}.block'"
-echo $CORE_PEER_MSPCONFIGPATH
-peer channel fetch 0 ./channel-artifacts/${CHANNEL_NAME}.block -c ${CHANNEL_NAME} -o orderer.example.com:${ORDERER_GENERAL_PORT} --tls --cafile $ORDERER_CA
+	infoln "fetch channel genesis block '${CHANNEL_NAME}.block'"
+	echo $CORE_PEER_MSPCONFIGPATH
+	peer channel fetch 0 ./channel-artifacts/${CHANNEL_NAME}.block -c ${CHANNEL_NAME} -o orderer.example.com:${ORDERER_GENERAL_PORT} --tls --cafile $ORDERER_CA
 
 fi
 
@@ -149,10 +155,10 @@ fi
 PEER_NUM=$(cat ${CONFIG_PATH} | jq ".peers | length")
 for ((i=0;i<$PEER_NUM;i++));
 do
-	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME")
-
+	ORG=$(cat ${CONFIG_PATH} | jq ".peers[$i].NAME" | tr -d '"')
+	PEER_PORT=$(cat ${CONFIG_PATH} | jq ".peers[$i].PEER_PORT" | tr -d '"')
 	infoln "Joining ${ORG} peer to the channel..."
-	joinChannel $ORG
+	joinChannel $ORG $PEER_PORT
 	
 done
 
