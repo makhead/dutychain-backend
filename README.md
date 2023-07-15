@@ -8,14 +8,20 @@ add peer domain, ca domain and orderer domain to /etc/hosts
 Example:
 Machine 1(192.168.241.142): Org1, OrgABC, Orderer
 Machine 2(192.168.241.145): OrgDEF
+
+Domain Example:
+Org1: org1.testing.com
+OrgABC: orgABC.example.com
+OrgDEF: orgDEF.example.com
+Orderer: testing.com
 ```
-192.168.241.142 peer0.org1.example.com
+192.168.241.142 peer0.org1.testing.com
 192.168.241.142 peer0.orgABC.example.com
 192.168.241.145 peer0.orgDEF.example.com
 192.168.241.145 ca.orgDEF.example.com
 192.168.241.142 ca.orgABC.example.com
-192.168.241.142 ca.org1.example.com
-192.168.241.142 orderer.example.com
+192.168.241.142 ca.org1.testing.com
+192.168.241.142 orderer.testing.com
 ```
 
 ### 1. Setup config.json
