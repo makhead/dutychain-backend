@@ -25,6 +25,15 @@ Orderer: testing.com
 ```
 
 ### 1. Setup config.json
+The following fields can be set arbitrarily:
+
+* isDeployOrderer
+* PROFILE
+* orderer.DOMAIN
+* orderer.IP_ADDR
+* peers.NAME
+* peers.DOMAIN
+* peers.IP_ADDR
 
 ### 2. Generate Docker config files
 ```
