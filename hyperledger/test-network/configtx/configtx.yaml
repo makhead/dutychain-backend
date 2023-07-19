@@ -32,7 +32,7 @@ Organizations:
         ID: OrdererMSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
-        MSPDir: ../organizations/ordererOrganizations/testing.com/msp
+        MSPDir: ../organizations/ordererOrganizations/example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -49,17 +49,17 @@ Organizations:
                 Rule: "OR('OrdererMSP.admin')"
 
         OrdererEndpoints:
-            - orderer.testing.com:7050
+            - orderer.example.com:7050
 
-    - &Org1
+    - &OrgA
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: Org1MSP
+        Name: OrgAMSP
 
         # ID to load the MSP definition as
-        ID: Org1MSP
+        ID: OrgAMSP
 
-        MSPDir: ../organizations/peerOrganizations/org1.testing.com/msp
+        MSPDir: ../organizations/peerOrganizations/orgA.example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -67,26 +67,26 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+                Rule: "OR('OrgAMSP.admin', 'OrgAMSP.peer', 'OrgAMSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+                Rule: "OR('OrgAMSP.admin', 'OrgAMSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('Org1MSP.admin')"
+                Rule: "OR('OrgAMSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org1MSP.peer')"
+                Rule: "OR('OrgAMSP.peer')"
 
-    - &OrgABC
+    - &OrgB
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: OrgABCMSP
+        Name: OrgBMSP
 
         # ID to load the MSP definition as
-        ID: OrgABCMSP
+        ID: OrgBMSP
 
-        MSPDir: ../organizations/peerOrganizations/orgABC.example.com/msp
+        MSPDir: ../organizations/peerOrganizations/orgB.example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -94,26 +94,26 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.admin', 'OrgABCMSP.peer', 'OrgABCMSP.client')"
+                Rule: "OR('OrgBMSP.admin', 'OrgBMSP.peer', 'OrgBMSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.admin', 'OrgABCMSP.client')"
+                Rule: "OR('OrgBMSP.admin', 'OrgBMSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.admin')"
+                Rule: "OR('OrgBMSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('OrgABCMSP.peer')"
+                Rule: "OR('OrgBMSP.peer')"
     
-    - &OrgDEF
+    - &OrgC
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: OrgDEFMSP
+        Name: OrgCMSP
 
         # ID to load the MSP definition as
-        ID: OrgDEFMSP
+        ID: OrgCMSP
 
-        MSPDir: ../organizations/peerOrganizations/orgDEF.example.com/msp
+        MSPDir: ../organizations/peerOrganizations/orgC.example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -121,16 +121,16 @@ Organizations:
         Policies:
             Readers:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.admin', 'OrgDEFMSP.peer', 'OrgDEFMSP.client')"
+                Rule: "OR('OrgCMSP.admin', 'OrgCMSP.peer', 'OrgCMSP.client')"
             Writers:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.admin', 'OrgDEFMSP.client')"
+                Rule: "OR('OrgCMSP.admin', 'OrgCMSP.client')"
             Admins:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.admin')"
+                Rule: "OR('OrgCMSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('OrgDEFMSP.peer')"
+                Rule: "OR('OrgCMSP.peer')"
 
 
 ################################################################################
@@ -242,14 +242,14 @@ Orderer: &OrdererDefaults
     # as TLS validation.  The preferred way to specify orderer addresses is now
     # to include the OrdererEndpoints item in your org definition
     Addresses:
-        - orderer.testing.com:7050
+        - orderer.example.com:7050
 
     EtcdRaft:
         Consenters:
-        - Host: orderer.testing.com
+        - Host: orderer.example.com
           Port: 7050
-          ClientTLSCert: ../organizations/ordererOrganizations/testing.com/orderers/orderer.testing.com/tls/server.crt
-          ServerTLSCert: ../organizations/ordererOrganizations/testing.com/orderers/orderer.testing.com/tls/server.crt
+          ClientTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+          ServerTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
 
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 2s
@@ -344,7 +344,7 @@ Profiles:
         Application:
             <<: *ApplicationDefaults
             Organizations:
-                - *Org1
-                - *OrgABC
-                - *OrgDEF
+                - *OrgA
+                - *OrgB
+                - *OrgC
             Capabilities: *ApplicationCapabilities

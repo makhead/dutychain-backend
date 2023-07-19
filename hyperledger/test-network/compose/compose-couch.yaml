@@ -11,8 +11,8 @@ networks:
 
 services:
 
-  couchdb1:
-    container_name: couchdb1
+  couchdbA:
+    container_name: couchdbA
     image: couchdb:3.3.2
     labels:
       service: hyperledger-fabric
@@ -28,20 +28,20 @@ services:
     networks:
       - test
 
-  peer0.org1.testing.com:
+  peer0.orgA.example.com:
     environment:
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdbA:5984
       # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
       # provide the credentials for ledger to connect to CouchDB.  The username and password must
       # match the username and password set for the associated CouchDB.
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
     depends_on:
-      - couchdb1
+      - couchdbA
 
-  couchdbABC:
-    container_name: couchdbABC
+  couchdbB:
+    container_name: couchdbB
     image: couchdb:3.3.2
     labels:
       service: hyperledger-fabric
@@ -57,15 +57,15 @@ services:
     networks:
       - test
 
-  peer0.orgABC.example.com:
+  peer0.orgB.example.com:
     environment:
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdbABC:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdbB:5984
       # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
       # provide the credentials for ledger to connect to CouchDB.  The username and password must
       # match the username and password set for the associated CouchDB.
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
     depends_on:
-      - couchdbABC
+      - couchdbB
 

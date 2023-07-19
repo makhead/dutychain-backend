@@ -112,6 +112,26 @@ COUCHDB_PASSWORD=$(cat ${CONFIG_PATH} | jq '.COUCHDB_PASSWORD' | tr -d '"')
 echo 'generating compose/compose-test-net.yaml'
 cat compose/compose-test-net-template.yaml > compose/compose-test-net.yaml
 
+for ((i=$PEER_NUM-1;i>=0;i--));
+do
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
+
+    sed -e "/volumes:/a \ \ peer0.${DOMAIN}:" \
+        compose/compose-test-net.yaml > compose/compose-test-net-tmp.yaml
+    mv compose/compose-test-net-tmp.yaml compose/compose-test-net.yaml
+done
+
+
+isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
+if $isDeployOrderer;
+then
+    ORDERER_DOMAIN=$(cat ${CONFIG_PATH} | jq ".orderer.DOMAIN" | tr -d '"')
+    sed -e "/volumes:/a \ \ orderer.${ORDERER_DOMAIN}:" \
+        compose/compose-test-net.yaml > compose/compose-test-net-tmp.yaml
+    mv compose/compose-test-net-tmp.yaml compose/compose-test-net.yaml
+fi
+
+
 isDeployOrderer=$(cat ${CONFIG_PATH} | jq ".isDeployOrderer")
 if $isDeployOrderer;
 then
@@ -150,3 +170,11 @@ done
 cat compose/compose-test-net-cli-template.yaml >> compose/compose-test-net.yaml
 
 
+for ((i=$PEER_NUM-1;i>=0;i--));
+do
+    DOMAIN=$(cat ${CONFIG_PATH} | jq ".peers[$i].DOMAIN"| tr -d '"')
+
+    sed -e "/depends_on:/a \ \ \ \ \ \ -\ peer0.${DOMAIN}" \
+        compose/compose-test-net.yaml > compose/compose-test-net-tmp.yaml
+    mv compose/compose-test-net-tmp.yaml compose/compose-test-net.yaml
+done

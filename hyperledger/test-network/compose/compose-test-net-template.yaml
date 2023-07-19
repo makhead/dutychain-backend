@@ -6,9 +6,6 @@
 version: '3.7'
 
 volumes:
-  orderer.example.com:
-  peer0.org1.example.com:
-  peer0.org2.example.com:
   
 networks:
   test:

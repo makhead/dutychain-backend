@@ -6,9 +6,9 @@
 version: '3.7'
 
 volumes:
-  orderer.testing.com:
-  peer0.org1.testing.com:
-  peer0.orgABC.example.com:
+  orderer.example.com:
+  peer0.orgA.example.com:
+  peer0.orgB.example.com:
   
 networks:
   test:
@@ -16,8 +16,8 @@ networks:
 
 services:
 
-  orderer.testing.com:
-    container_name: orderer.testing.com
+  orderer.example.com:
+    container_name: orderer.example.com
     image: hyperledger/fabric-orderer:latest
     labels:
       service: hyperledger-fabric
@@ -43,14 +43,14 @@ services:
       - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.testing.com:9443
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.example.com:9443
       - ORDERER_METRICS_PROVIDER=prometheus
     working_dir: /root
     command: orderer
     volumes:
-        - ../organizations/ordererOrganizations/testing.com/orderers/orderer.testing.com/msp:/var/hyperledger/orderer/msp
-        - ../organizations/ordererOrganizations/testing.com/orderers/orderer.testing.com/tls/:/var/hyperledger/orderer/tls
-        - orderer.testing.com:/var/hyperledger/production/orderer
+        - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+        - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+        - orderer.example.com:/var/hyperledger/production/orderer
     ports:
       - 7050:7050
       - 7053:7053
@@ -58,8 +58,8 @@ services:
     networks:
       - test
 
-  peer0.org1.testing.com:
-    container_name: peer0.org1.testing.com
+  peer0.orgA.example.com:
+    container_name: peer0.orgA.example.com
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric
@@ -73,22 +73,22 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
-      - CORE_PEER_ID=peer0.org1.testing.com
-      - CORE_PEER_ADDRESS=peer0.org1.testing.com:7051
+      - CORE_PEER_ID=peer0.orgA.example.com
+      - CORE_PEER_ADDRESS=peer0.orgA.example.com:7051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.testing.com:7052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgA.example.com:7052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.testing.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.testing.com:7051
-      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgA.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgA.example.com:7051
+      - CORE_PEER_LOCALMSPID=OrgAMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.org1.testing.com:9444
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgA.example.com:9444
       - CORE_METRICS_PROVIDER=prometheus
-      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org1"}
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orgA"}
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
     volumes:
-        - ../organizations/peerOrganizations/org1.testing.com/peers/peer0.org1.testing.com:/etc/hyperledger/fabric
-        - peer0.org1.testing.com:/var/hyperledger/production
+        - ../organizations/peerOrganizations/orgA.example.com/peers/peer0.orgA.example.com:/etc/hyperledger/fabric
+        - peer0.orgA.example.com:/var/hyperledger/production
     working_dir: /root
     command: peer node start
     ports:
@@ -97,8 +97,8 @@ services:
     networks:
       - test
 
-  peer0.orgABC.example.com:
-    container_name: peer0.orgABC.example.com
+  peer0.orgB.example.com:
+    container_name: peer0.orgB.example.com
     image: hyperledger/fabric-peer:latest
     labels:
       service: hyperledger-fabric
@@ -112,22 +112,22 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
-      - CORE_PEER_ID=peer0.orgABC.example.com
-      - CORE_PEER_ADDRESS=peer0.orgABC.example.com:9051
+      - CORE_PEER_ID=peer0.orgB.example.com
+      - CORE_PEER_ADDRESS=peer0.orgB.example.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orgABC.example.com:9052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgB.example.com:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgABC.example.com:9051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgABC.example.com:9051
-      - CORE_PEER_LOCALMSPID=OrgABCMSP
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgB.example.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgB.example.com:9051
+      - CORE_PEER_LOCALMSPID=OrgBMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgABC.example.com:9445
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgB.example.com:9445
       - CORE_METRICS_PROVIDER=prometheus
-      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orgABC"}
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orgB"}
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
     volumes:
-        - ../organizations/peerOrganizations/orgABC.example.com/peers/peer0.orgABC.example.com:/etc/hyperledger/fabric
-        - peer0.orgABC.example.com:/var/hyperledger/production
+        - ../organizations/peerOrganizations/orgB.example.com/peers/peer0.orgB.example.com:/etc/hyperledger/fabric
+        - peer0.orgB.example.com:/var/hyperledger/production
     working_dir: /root
     command: peer node start
     ports:
@@ -154,8 +154,8 @@ services:
         - ../organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations
         - ../scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
     depends_on:
-      - peer0.org1.testing.com
-      - peer0.orgABC.example.com
+      - peer0.orgA.example.com
+      - peer0.orgB.example.com
     networks:
       - test
 

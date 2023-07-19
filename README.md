@@ -6,22 +6,22 @@
 add peer domain, ca domain and orderer domain to /etc/hosts
 
 Example:
-Machine 1(192.168.241.142): Org1, OrgABC, Orderer
-Machine 2(192.168.241.145): OrgDEF
+Machine 1(192.168.241.142): OrgA, OrgB, Orderer
+Machine 2(192.168.241.145): OrgC
 
 Domain Example:
-Org1: org1.testing.com
-OrgABC: orgABC.example.com
-OrgDEF: orgDEF.example.com
-Orderer: testing.com
+OrgA: orgA.example.com
+OrgB: orgB.example.com
+OrgC: orgC.example.com
+Orderer: example.com
 ```
-192.168.241.142 peer0.org1.testing.com
-192.168.241.142 peer0.orgABC.example.com
-192.168.241.145 peer0.orgDEF.example.com
-192.168.241.145 ca.orgDEF.example.com
-192.168.241.142 ca.orgABC.example.com
-192.168.241.142 ca.org1.testing.com
-192.168.241.142 orderer.testing.com
+192.168.241.142 peer0.orgA.example.com
+192.168.241.142 peer0.orgB.example.com
+192.168.241.145 peer0.orgC.example.com
+192.168.241.142 ca.orgA.example.com
+192.168.241.142 ca.orgB.example.com
+192.168.241.145 ca.orgC.example.com
+192.168.241.142 orderer.example.com
 ```
 
 ### 1. Setup config.json
@@ -42,21 +42,17 @@ The following fields can be set arbitrarily:
 
 ### 3. Setup configtx/configtx.yaml
 
-### 4. Setup compose/compose-test-net.yaml
-* modify the <B>volume</B> part
-* modify the <B>depends_on</B> part
-
-### 5. Start the network
+### 4. Start the network
 ```
 ./network.sh up createChannel -c mychannel -p ./config.json
 ```
 
-### 6. Copy certificates
+### 5. Copy certificates
 
-#### 6.1 machine with orderer
+#### 5.1 Copy certificates to machine with orderer
 copy the following non-local organizations certifiates from the following directory to the same directory in machine with orderer:
 ``` 
-/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/<Domain Name>/msp
+mkdir -p /dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgC.example.com/msp
 ```
 
 Documents needed to copy:
@@ -64,35 +60,35 @@ Documents needed to copy:
 * Directory <B>cacerts/</B>
 * Directory <B>tlscacerts/</B>
 
-Example [In machine with orderer]:
+Example [In machine without orderer]:
 ```
-scp config.yaml username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgDEF.example.com/msp
+scp config.yaml username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgC.example.com/msp
 
-scp -r cacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgDEF.example.com/msp
+scp -r cacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgC.example.com/msp
 
-scp -r tlscacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgDEF.example.com/msp
+scp -r tlscacerts/ username@192.168.241.142:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/peerOrganizations/orgC.example.com/msp
 ```
 
-#### 6.2 machine with orderer
+#### 5.2 Copy certificates to machine without orderer
 
 copy the following orderer certifiates from the following directory to the same directory in machine without orderer:
 ``` 
-/dutychain-backend/hyperledger/test-network/organizations/ordererOrganizations/<Orderer Domain Name>/
+mkdir -p /dutychain-backend/hyperledger/test-network/organizations/ordererOrganizations/example.com/
 ```
 
 Documents needed to copy:
 * Directory <B>tlsca/</B>
 
-Example [In machine without orderer]:
+Example [In machine with orderer]:
 ```
 scp -r tlsca/ username@192.168.241.145:/home/makhead/dutychain-backend/hyperledger/test-network/organizations/ordererOrganizations/example.com
 ```
 
-### 7. Press Enter to continue the script
+### 6. Press Enter to continue the script
 
-### 8. Deploy Chaincode
+### 7. Deploy Chaincode
 ```
-./network.sh deployCC -c mychannel -ccn ledger -ccp ../chaincode/ledger-doctype/ -ccl javascript -p ./config.json -ccep "OR('Org1MSP.peer','OrgABCMSP.peer','OrgDEFMSP.peer')" 
+./network.sh deployCC -c mychannel -ccn ledger -ccp ../chaincode/ledger-doctype/ -ccl javascript -p ./config.json -ccep "OR('OrgAMSP.peer','OrgBMSP.peer','OrgCMSP.peer')" 
 ```
 
 ## CleanUps
